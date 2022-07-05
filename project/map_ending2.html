@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <script type="text/javascript" src="js/lib/jquery.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/ScrollMagic.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/debug.addIndicators.js"></script>
+    <script type="text/javascript" src="js/lib/greensock/TweenMax.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/animation.gsap.js"></script>
+    <script src="https://use.typekit.net/nlq1kdt.js"></script>
+
+    <!--    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>-->
+    <!--    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>-->
+
+    <!--    <script src="https://unpkg.com/topojson@3"></script>-->
+
+
+    <!-- BOOTSTRAP5 最新编译并压缩的 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- 最新编译的 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+    <style>
+        html {
+            font-size: 22px; /*rem（font size of the root element）是指相对于根元素的字体大小的单位*/
+        }
+        body {
+            background: #141414;
+        }
+        .seedTooltip {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 5px;
+            width: 300px;
+            height: 200px;
+            /*max-width: 500px;*/
+            /*height: 300px;*/
+
+            -webkit-box-shadow: #c0bbb4 0px 0px 10px;
+            -moz-box-shadow: #c0bbb4 0px 0px 10px;
+            box-shadow: #c0bbb4 0px 0px 10px;
+            border-radius: 8px;
+            background-color: #FFFCF7;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Create an element where the map will take place -->
+<svg id="svgCTDCMap"></svg>
+<div id="geoTooltip" class="seedTooltip" style="height: fit-content; width: fit-content; padding-left: 1rem; padding-right: 1rem; display: none">
+    <p id="geoCountryName">USA</p>
+    <p style="font-size: 0.6rem"> <span id="geoCTDCCases">192</span> number of cases</p>
+</div>
+<script>
+
+    d3.select("#svgCTDCMap")
+        .attr("width", 0.8 * window.innerWidth)
+        .attr("height", 0.8 * window.innerHeight)
+        .attr("transform", `translate(${0.1 * window.innerWidth}, ${0.1 * window.innerHeight})`);
+
+    // The svg
+    const svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+    // Map and projection
+    const projection = d3.geoMercator()
+        .center([0,20])                // GPS of location to zoom on
+        .scale(200)                       // This is like the zoom
+        .translate([ width/2, height/2 ])
+
+
+    //读取国家iso code以及坐标数据
+    var isoCordData = {};
+    //读取CTDC数据
+    //[{isocode: 'DE', homelat: '40.2', homelon: '-74.8', homecontinent: 'North America', n: '33377'}, ... ]
+    var geoCTDCData = {};
+    var finalCTDCData = [];
+
+    //kmeans均值算法
+    const kMeans = (data, k = 1) => {
+        const centroids = data.slice(0, k);
+        const distances = Array.from({ length: data.length }, () =>
+            Array.from({ length: k }, () => 0)
+        );
+        const classes = Array.from({ length: data.length }, () => -1);
+        let itr = true;
+
+        while (itr) {
+            itr = false;
+
+            for (let d in data) {
+                for (let c = 0; c < k; c++) {
+                    distances[d][c] = Math.hypot(
+                        ...Object.keys(data[0]).map(key => data[d][key] - centroids[c][key])
+                    );
+                }
+                const m = distances[d].indexOf(Math.min(...distances[d]));
+                if (classes[d] !== m) itr = true;
+                classes[d] = m;
+            }
+
+            for (let c = 0; c < k; c++) {
+                centroids[c] = Array.from({ length: data[0].length }, () => 0);
+                const size = data.reduce((acc, _, d) => {
+                    if (classes[d] === c) {
+                        acc++;
+                        for (let i in data[0]) centroids[c][i] += data[d][i];
+                    }
+                    return acc;
+                }, 0);
+                for (let i in data[0]) {
+                    centroids[c][i] = parseFloat(Number(centroids[c][i] / size).toFixed(2));
+                }
+            }
+        }
+
+        return classes;
+    };
+
+
+    //绘制地图的函数
+    var drawMapData = function (finalData){
+        Promise.all([
+            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+            // d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_gpsLocSurfer.csv")
+        ]).then(function (initialize) {
+            console.log(finalData.length)
+
+
+            let dataGeo = initialize[0]
+            // let data = initialize[1]
+            // Create a color scale
+            // const color = d3.scaleOrdinal()
+            //     .domain(data.map(d => d.homecontinent))
+            //     .range(d3.schemePaired);
+
+            // Add a scale for bubble size
+            const valueExtent = d3.extent(finalData, d => +d.n)
+
+            const size = d3.scaleSqrt()
+                .domain(valueExtent)  // What's in the data
+                .range([1, 50])  // Size in pixel
+
+            // let windGlyphIndex = 0;
+
+            // 地图绘制
+            svg.append("g")
+                .selectAll("path")
+                .data(dataGeo.features)
+                .join("path")
+                .attr("fill", "#373b4f")
+                .style("opacity", .35)
+                .attr("d", d3.geoPath()
+                    .projection(projection)
+                )
+                .style("stroke", "none");
+
+
+
+
+
+
+            let windGlyphWid = 598.08;
+            let windGlyphHei = 368.3;
+            let windGlyphScale = d3.scaleSqrt()
+                .domain(valueExtent)
+                .range([.03, 0.3])
+
+            // Add circles:
+            svg
+                .selectAll(".geoCircles")
+                .data(finalData) //.sort((a,b) => +b.n - +a.n).filter((d,i) => i<1000)
+                .enter()
+                .append("g") //circle
+                .attr("cx", d => d.cx) //d => projection([+d.homelon, +d.homelat])[0]
+                .attr("cy", d => d.cy) //d => projection([+d.homelon, +d.homelat])[1]
+                // .attr("r", d => size(+d.n))
+                .attr("id", function (d, i){
+                    return `geoCircles${i}`
+                }) //d=> {if (d.n>2000) {return "black"} else {return "none"}  }
+                .attr("class", "geoCircles")
+                // .style("fill", "#ff3672")
+                // .attr("stroke", "none") //d=> {if (d.n>2000) {return "black"} else {return "none"}  }
+                // .attr("stroke-width", 1)
+                .attr("transform", d => `translate(${projection([+d.homelon, +d.homelat])[0] - windGlyphWid * windGlyphScale(+d.n) / 2}, ${ projection([+d.homelon, +d.homelat])[1] - windGlyphHei * windGlyphScale(+d.n) / 2}), scale(${windGlyphScale(+d.n)})`)
+                // .attr("r", d => size(+d.n))
+                .on("mouseover", function (event, d){
+                    // d3.select(this)
+                    //     //.style("stroke", "black")
+                    //     .style("opacity", 1)
+
+                    let cx = d3.select(this).attr("cx");
+                    let cy = d3.select(this).attr("cy");
+                    // let r = d3.select(this).attr("r");
+                    let transform = d3.select(this).attr("transform");
+
+                    d3.selectAll(".geoCircles")
+                        // .transition()
+                        // .duration(500)
+                        .attr("opacity", .3);
+
+                    d3.select(this)
+                        .attr("opacity", 1)
+                    // .attr("stroke-width", 5)
+                    // .transition()
+                    // .duration(2000)
+                    // .attr("transform", transform.split("scale")[0] + `scale(1)`)
+
+                    d3.select("#geoTooltip")
+                        .style("display", "block")
+                        .style("left", `${cx - windGlyphWid * windGlyphScale(+d.n) / 2}px`)
+                        .style("top", `${cy}px`);
+
+                    d3.select("#geoCountryName")
+                        .html(d.country);
+
+                    d3.select("#geoCTDCCases")
+                        .html(d.n);
+
+
+                })
+                .on("mouseleave", function (){
+                    d3.select("#geoTooltip")
+                        .style("display", "none");
+
+                    d3.selectAll(".geoCircles")
+                        // .transition()
+                        // .duration(500)
+                        .attr("opacity", 1);
+                })
+                // .transition()
+                // .duration(1000)
+                // .attr("fill-opacity", .4);
+
+            for(let i = 0; i < finalData.length; i++)
+            {
+                d3.xml("asset/svg/wind4.svg")
+                    .then(data => {
+                        d3.select(`#geoCircles${i}`).node().append(data.documentElement)
+                    });
+            }
+
+
+
+
+
+
+
+            // svg
+            //     .selectAll(".cc")
+            //     .data(finalData) //.sort((a,b) => +b.n - +a.n).filter((d,i) => i<1000)
+            //     .enter()
+            //     .append("circle") //circle
+            //     .attr("cx", d => projection([+d.homelon, +d.homelat])[0])
+            //     .attr("cy", d => projection([+d.homelon, +d.homelat])[1])
+            //     .attr("r", d => size(+d.n))
+            //     .style("fill", "#ff3672")
+            //     .attr("stroke", "none") //d=> {if (d.n>2000) {return "black"} else {return "none"}  }
+            //     .attr("stroke-width", 1)
+            //     .attr("fill-opacity", .1)
+            //
+            //     .on("mouseover", function (event, d){
+            //         // d3.select(this)
+            //         //     //.style("stroke", "black")
+            //         //     .style("opacity", 1)
+            //
+            //         let cx = d3.select(this).attr("cx");
+            //         let cy = d3.select(this).attr("cy");
+            //         let r = d3.select(this).attr("r");
+            //
+            //         d3.select("#geoTooltip")
+            //             .style("display", "block")
+            //             .style("left", `${cx - 2 * r}px`)
+            //             .style("top", `${cy}px`);
+            //
+            //         d3.select("#geoCountryName")
+            //             .html(d.country);
+            //
+            //         d3.select("#geoCTDCCases")
+            //             .html(d.n);
+            //
+            //
+            //     })
+            //     .on("mouseleave", function (){
+            //         d3.select("#geoTooltip")
+            //             .style("display", "none")
+            //     })
+
+
+
+        });
+    };
+
+    //产出finalCTDCData的函数
+    var geneFinalCTDCData = function (){
+        d3.csv("asset/csv/CTDC.csv").then(function (data) {
+            //筛选数据
+            for(let i = 0; i < data.length; i++)
+            {
+                if(data[i].meansOfControlRestrictsMovement!="0" && data[i].meansOfControlRestrictsMovement!="")
+                {
+                    if(data[i]["citizenship"] in geoCTDCData)
+                    {
+                        geoCTDCData[data[i]["citizenship"]] += 1;
+                    }else{
+                        geoCTDCData[data[i]["citizenship"]] = 1;
+                    }
+                }
+            }
+
+            //geoCTDCData = {"AE": 1; "ED": 10; ...}
+
+            let countryCordLst = [];
+            for(let i in geoCTDCData)
+            {
+                countryCordLst.push([projection([isoCordData[i][1], isoCordData[i][0]])[0],
+                    projection([isoCordData[i][1], isoCordData[i][0]])[1]])
+            }
+            console.log(countryCordLst)
+
+            for(let i in geoCTDCData)
+            {
+                // console.log(i);
+                let tmpItem = {};
+                tmpItem["isocode"] = i;
+                tmpItem["country"] = isoCordData[i][2];
+                tmpItem["homelat"] = isoCordData[i][0];
+                tmpItem["homelon"] = isoCordData[i][1];
+                tmpItem["cx"] = projection([isoCordData[i][1], isoCordData[i][0]])[0];
+                tmpItem["cy"] = projection([isoCordData[i][1], isoCordData[i][0]])[1];
+
+                tmpItem["n"] = geoCTDCData[i];
+                finalCTDCData.push(tmpItem);
+            }
+            // --------------- //
+            // kmeans计算新质心 //
+            // --------------- //
+
+
+            drawMapData(finalCTDCData);
+        });
+
+    };
+
+    //加载iso代码
+    d3.csv("asset/csv/countries_codes_and_coordinates.csv").then(function (data) {
+        for(let i = 0; i < data.length; i++)
+        {
+            isoCordData[data[i]["Alpha2Code"]] = [data[i]["Latitude"], data[i]["Longitude"], data[i]["Country"]];
+        }
+
+        geneFinalCTDCData();
+    });
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

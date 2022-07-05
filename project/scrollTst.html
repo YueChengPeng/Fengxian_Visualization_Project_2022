@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+
+    <script type="text/javascript" src="js/lib/jquery.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/ScrollMagic.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/debug.addIndicators.js"></script>
+    <script type="text/javascript" src="js/lib/greensock/TweenMax.min.js"></script>
+
+</head>
+<body>
+<!--<script>-->
+<!--    var controller = new ScrollMagic.Controller();-->
+<!--    var scene = new ScrollMagic.Scene({-->
+<!--        offset: 100, // start scene after scrolling for 100px-->
+<!--        duration: 400 // pin the element for 400px of scrolling-->
+<!--    });-->
+<!--    -->
+<!--    // Add Scene to ScrollMagic Controller-->
+<!--    controller.addScene(scene);-->
+<!--</script>-->
+
+<script>
+    var controller = new ScrollMagic.Controller();
+    $(function () { // wait for document ready
+        // build scene
+        var scene = new ScrollMagic.Scene({triggerElement: "#trigger1", duration: 300})
+            .setPin("#pin1")
+            .addIndicators({name: "1 (duration: 300)"}) // add indicators (requires plugin)
+            .addTo(controller);
+    });
+</script>
+
+</body>
+</html>

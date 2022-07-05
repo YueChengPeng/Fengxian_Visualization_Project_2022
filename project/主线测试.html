@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="js/lib/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v6.js"></script>
+</head>
+<body>
+<script>
+    var svg = d3.select("body")
+        .append("svg")
+        .attr("width", window.innerWidth)
+        .attr("height", window.innerHeight);
+
+    svg.append("line")
+        .attr("x1", "100")
+        .attr("x2", "100")
+        .attr("y1", "100")
+        .attr("y2", "300")
+        .style("stroke", "#000000")
+        .style("stroke-width", "2");
+
+</script>
+</body>
+</html>

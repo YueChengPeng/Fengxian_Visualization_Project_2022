@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 186.03 57.86">
+
+    <g id="图层_2" data-name="图层 2">
+        <g id="图层_1-2" data-name="图层 1">
+            <path class="cls-1"
+                  d="M57.6,6.89c-11.6,1-27.75-.47-37-.12C9.22,7.2-1.68,9.24.22,18.61,2.28,28.77,8.25,37,21.44,37,44,37,57.07,12.5,75,8.92,95.66,4.78,162.06-6,185.11,23c-3.67-11.37-27.23-23-58.7-23C97.89,0,81.12,4.86,57.6,6.89Z"/>
+            <path class="cls-2"
+                  d="M185.11,23c7.1,11.23-28.57,34.89-53,34.89-31.51,0-57.07-27.1-93.53-27.1C50.93,16.55,69,8.67,69,8.67S162.94-12.13,185.11,23Z"/>
+            <path class="cls-3" d="M92.56,4.3c16.76,0,27.24,14.22,29.05,28.44"/>
+            <path class="cls-4" d="M125.75,2.55C142.51,2.55,153,16.77,154.8,31"/>
+        </g>
+    </g>
+    <defs>
+        <style>
+            .cls-1,.cls-2{fill:#ffca36;}.cls-2{opacity:0.3;}.cls-3,.cls-4{fill:none;stroke-linecap:round;stroke-miterlimit:10;stroke-width:2px;opacity:0.7;}.cls-3{stroke:url(#未命名的渐变_176);}.cls-4{stroke:url(#未命名的渐变_176-2);}
+        </style>
+        <linearGradient id="未命名的渐变_176" x1="92.56" y1="4.3" x2="121.61" y2="32.74" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#ffca36"/>
+            <stop offset="0.5" stop-color="#ffca36" stop-opacity="0.98"/>
+            <stop offset="1" stop-color="#ffca36" stop-opacity="0.3"/>
+        </linearGradient>
+        <linearGradient id="未命名的渐变_176-2" x1="125.75" y1="16.77" x2="156.8" y2="16.77" xlink:href="#未命名的渐变_176"/>
+    </defs>
+</svg>

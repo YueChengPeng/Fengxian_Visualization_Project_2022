@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            background: #FFF9F0;
+        }
+
+    </style>
+</head>
+<body>
+
+
+<!-- Create a div where the graph will take place -->
+<div id="streamGraphScroll" style="position: fixed; top:0px; right:20px"></div>
+<div style="margin:10000px"></div>
+</body>
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v6.js"></script>
+
+<script>
+    // set the dimensions and margins of the graph
+    const margin = {top: 20, right: 30, bottom: 0, left: 10},
+        width = 800 - margin.left - margin.right,
+        height = 100 - margin.top - margin.bottom;
+    var windowHei = window.innerHeight;
+    var windowWid = window.innerWidth;
+
+    const svgStreamScroll = d3.select("#streamGraphScroll")
+        .append("svg")
+        .attr("width", 100 / 1728 * windowWid)
+        .attr("height", windowHei)
+        .attr("id", "svgStreamScroll");
+
+    // append the svg object to the body of the page
+    const svgStreamScrollGroup = svgStreamScroll
+        .append("g")
+        .attr("transform",
+            `translate(0, ${windowHei * 0.02})`);  // ${} 取数字值 , 0.02使得竖直居中，因为总高度为0.96windowHei
+
+    scrollrect = svgStreamScrollGroup.append("rect")
+        .attr("x", "0")
+        .attr("y", "0")
+        .attr("width", 100 / 1728 * windowWid)
+        .attr("height", windowHei * 0.96)
+        .attr("rx", "20")
+        .attr("ry", "20")
+        .attr("fill", "#FAAC0F")
+        .attr("opacity", "0.1")
+        .attr("id", "scrollrectBackground");
+
+
+    // Parse the Data
+    d3.csv("asset/阅读数.csv").then(function (data) {
+        console.log(data)
+        // List of groups = header of the csv files
+        const keys = data.columns.slice(1)//从第二个开始往后切片
+        console.log(keys)
+
+        // Add X axis, 纵向
+        const x = d3.scaleLinear()
+            .domain(d3.extent(data, function (d) {
+                return parseInt(d.time);
+            }))  // 返回data中的year属性，并求值域
+            .range([0, windowHei * 0.96]);
+
+
+        // Add Y axis， 横向宽度
+        const y = d3.scaleLinear()
+            .domain([0, 200000000])
+            .range([5, 0]); //映射范围
+
+        var colorrange = ["#FAAC0F", "#FBB323", "#FBBA37", "#FBC14B", "#FCC85F", "#FCCE73", "#FDD587", "#FDDC9B",];
+        // color palette
+        const color = d3.scaleOrdinal()
+            .domain(keys)
+            .range(colorrange); //d3.schemeDark2
+
+        //stack the data?
+        const stackedData = d3.stack()
+            .offset(d3.stackOffsetSilhouette)
+            .keys(keys) //这样用stack创造出的是函数！还要给他参数（data）
+            (data)
+
+        // create a tooltip
+        const Tooltip = svgStreamScrollGroup
+            .append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .style("opacity", 0)
+            .style("font-size", 17) //在0，0位置显示悬停的名称
+
+        // Three function that change the tooltip when user hover / move / leave a cell
+        const mouseover = function (event, d) {
+            Tooltip.style("opacity", 1)
+            d3.selectAll(".myArea").style("opacity", .2) //其他变半透明
+            d3.select(this)
+                //.style("stroke", "black")
+                .style("opacity", 1)
+            grp = d.key
+            Tooltip.text(grp)
+        }
+        const mousemove = function (event, d, i) {
+
+        }
+        const mouseleave = function (event, d) {
+            Tooltip.style("opacity", 0)
+            d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+        }
+
+        // Area generator
+        const area = d3.area()
+            .curve(d3.curveMonotoneY)  //.curve(d3.curveCatmullRom.alpha(0))
+            .y(function (d) {
+                return x(d.data.time);
+            })
+            .x0(function (d) {
+                return y(d[0]);
+            })
+            .x1(function (d) {
+                return y(d[1]);
+            })
+
+        // Show the areas
+        svgStreamScrollGroup
+            .selectAll("mylayers")
+            .data(stackedData)
+            .join("path")
+            .attr("class", "myArea")
+            .attr("transform", `translate(${44 / 1728 * windowWid}, 0)`)
+            .style("fill", function (d) {
+                return color(d.key);
+            })
+            .attr("d", area)
+            .on("mouseover", mouseover)
+            .on("mousemove", mousemove)
+            .on("mouseleave", mouseleave)
+
+    })
+</script>
+
+<script>
+    d3.select(window).on('resize', resize); // 现在是一次刷新"一次性"的自适应，如果需要实时自适应需要在resize函数里面添加对应的变化
+    function resize() {
+
+        d3.select("#svgStreamScroll").attr("width", 100 / 1728 * window.innerWidth);  //改变svg宽度
+        d3.select("#streamGraphScroll").style("right", (20 / 1728 * window.innerWidth).toString()+"px");  //调整滑条和窗口右边的距离
+        d3.selectAll(".myArea").remove(); // 先把之前绘制的删除
+        d3.select("#scrollrectBackground")
+            .attr("width", 100 / 1728 * window.innerWidth)
+            .attr("height", window.innerHeight * 0.96);
+
+        d3.csv("asset/阅读数.csv").then(function (data) {
+            console.log(data)
+            // List of groups = header of the csv files
+            const keys = data.columns.slice(1)//从第二个开始往后切片
+            console.log(keys)
+
+            // Add X axis, 纵向
+            const x = d3.scaleLinear()
+                .domain(d3.extent(data, function (d) {
+                    return parseInt(d.time);
+                }))  // 返回data中的year属性，并求值域
+                .range([0, window.innerHeight * 0.96]);
+
+
+            // Add Y axis， 横向宽度
+            const y = d3.scaleLinear()
+                .domain([0, 200000000])
+                .range([5 / 1728 * window.innerWidth, 0]); //映射范围
+
+            var colorrange = ["#FAAC0F", "#FBB323", "#FBBA37", "#FBC14B", "#FCC85F", "#FCCE73", "#FDD587", "#FDDC9B",];
+            // color palette
+            const color = d3.scaleOrdinal()
+                .domain(keys)
+                .range(colorrange); //d3.schemeDark2
+
+            //stack the data?
+            const stackedData = d3.stack()
+                .offset(d3.stackOffsetSilhouette)
+                .keys(keys) //这样用stack创造出的是函数！还要给他参数（data）
+                (data)
+
+            // create a tooltip
+            const Tooltip = svgStreamScrollGroup
+                .append("text")
+                .attr("x", 0)
+                .attr("y", 0)
+                .style("opacity", 0)
+                .style("font-size", 17) //在0，0位置显示悬停的名称
+
+            // Three function that change the tooltip when user hover / move / leave a cell
+            const mouseover = function (event, d) {
+                Tooltip.style("opacity", 1)
+                d3.selectAll(".myArea").style("opacity", .2) //其他变半透明
+                d3.select(this)
+                    //.style("stroke", "black")
+                    .style("opacity", 1)
+                grp = d.key
+                Tooltip.text(grp)
+            }
+            const mousemove = function (event, d, i) {
+
+            }
+            const mouseleave = function (event, d) {
+                Tooltip.style("opacity", 0)
+                d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+            }
+
+            // Area generator
+            const area = d3.area()
+                .curve(d3.curveMonotoneY)  //.curve(d3.curveCatmullRom.alpha(0))
+                .y(function (d) {
+                    return x(d.data.time);
+                })
+                .x0(function (d) {
+                    return y(d[0]);
+                })
+                .x1(function (d) {
+                    return y(d[1]);
+                })
+
+            // Show the areas
+            svgStreamScrollGroup
+                .selectAll("mylayers")
+                .data(stackedData)
+                .join("path")
+                .attr("class", "myArea")
+                .attr("transform", `translate(${44 / 1728 * window.innerWidth}, 0)`)
+                .style("fill", function (d) {
+                    return color(d.key);
+                })
+                .attr("d", area)
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
+        })
+    }
+
+</script>
+</html>

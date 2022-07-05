@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+
+<head>
+
+  <script src="https://d3js.org/d3.v6.js"></script>
+  <script src="fisheye.js" charset="utf-8"></script>
+</head>
+
+<body>
+<script type="text/javascript">
+  var w = 900;
+  var h = 900;
+
+  nodes = [{x:20, y:50},{x:50, y:20}]
+
+  // d3.csv("data.csv").then(function (data) {
+
+    var fisheye = d3.fisheye.circular().radius(100);
+
+    var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+
+    var groups = svg.selectAll('g.samaraSeed')
+            .data(nodes)
+            .join('g')
+            // .datum( function(d) {
+            //   return {x: d.pages, y: d.books}
+            // })
+            .attr("class", "samaraSeed")
+            .attr("id", function(d, i){
+              return `seed${i}`
+            })
+
+    for(let i = 0; i <= 17; i++)
+    {
+      let group1 = d3.select(`#seed${i}`)
+              .attr("transform", function (d){ return `translate(${d.x}, ${d.y}),scale(1)`; }) //rotate(-20,300,400)
+
+      group1.append("circle")
+        .attr("cx", "0")
+        .attr("cy", "0")
+        .attr("r", "4")
+
+    }
+
+
+    // var circles = svg.selectAll("circle")
+    //         .data(data)
+    //         .enter()
+    //         .append("circle")
+    //         .datum( function(d) {
+    //           return {x: d.pages, y: d.books}
+    //         })
+    //         .attr("cx", function (d) {return d.x})
+    //         .attr("cy", function (d) {return d.y})
+    //         .attr("r", 2);
+
+    svg.on("mousemove", function() {
+      fisheye.focus(d3.pointer(event, this));
+
+      // 位置一起变化
+      // groups.each(function(d) { d.fisheye = fisheye(d); })
+      //         .attr("transform", function (d){ return `translate(${d.fisheye.x}, ${d.fisheye.y}),scale(${d.fisheye.z})`; })
+
+
+              // .attr("cx", function(d) { return d.fisheye.x; })
+              // .attr("cy", function(d) { return d.fisheye.y; })
+              // .attr("r", function(d) { return d.fisheye.z * 2; });
+
+      groups.each(function(d) { d.fisheye = fisheye(d); })
+              .attr("transform", function(d){ return d3.select(this).attr("transform").split("scale")[0] + `scale(${d.fisheye.z})` })
+
+    });
+  // });
+</script>
+</body>
+
+</html>

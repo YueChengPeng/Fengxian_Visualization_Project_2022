@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.99 19.99">
+    <defs>
+        <style>.cls-1{fill:#ffc000;}.cls-2{fill:#fff9f0;}</style>
+    </defs>
+    <g id="图层_2">
+        <g id="图层_1-2" >
+            <circle class="cls-1" cx="9.99" cy="9.99" r="9.99"/>
+            <path class="cls-2" d="M9,6.28a1,1,0,0,1,1-1,1,1,0,1,1,0,1.93A1,1,0,0,1,9,6.28Zm.15,2.05h1.76v6.72H9.12Z"/>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <script type="text/javascript" src="js/lib/jquery.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/ScrollMagic.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/debug.addIndicators.js"></script>
+    <script type="text/javascript" src="js/lib/greensock/TweenMax.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/animation.gsap.js"></script>
+    <script src="https://use.typekit.net/nlq1kdt.js"></script>
+
+    <!--    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>-->
+    <!--    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>-->
+
+    <!--    <script src="https://unpkg.com/topojson@3"></script>-->
+
+
+    <!-- BOOTSTRAP5 最新编译并压缩的 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- 最新编译的 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+    <style>
+        html {
+            font-size: 22px; /*rem（font size of the root element）是指相对于根元素的字体大小的单位*/
+        }
+        body {
+            background: #141414;
+        }
+        .seedTooltip {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 5px;
+            width: 300px;
+            height: 200px;
+            /*max-width: 500px;*/
+            /*height: 300px;*/
+
+            -webkit-box-shadow: #c0bbb4 0px 0px 10px;
+            -moz-box-shadow: #c0bbb4 0px 0px 10px;
+            box-shadow: #c0bbb4 0px 0px 10px;
+            border-radius: 8px;
+            background-color: #FFFCF7;
+        }
+        .triangle {
+            fill: #FFCA36;
+            stroke: #FFCA36;
+            stroke-width: 6;
+        }
+        .divider-flex {
+            height: 1px;
+            border-top: 1px solid #e5e5e5;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            /*border-radius: 0.5px;*/
+            text-align: center;
+        }
+
+
+        .geoSubTab {
+            display: flex;
+            height: fit-content;
+            width: 180px;
+            border: #FFF9F0 1px solid;
+            text-align: center;
+            justify-content: center;
+            background-color: #B0BEC5;
+            border-radius: 0.1rem;
+        }
+
+        .geoSubTabContent {
+            display: flex;
+            flex-direction: column;
+            height: 10rem;
+            width: 180px;
+            border: #FFF9F0 1px solid;
+            /*text-align: center;*/
+            /*justify-content: center;*/
+            background-color: rgba(176, 190, 197, 0.5);
+            border-radius: 0.1rem;
+
+            font-size: 0.6rem;
+            overflow: auto;
+        }
+
+        .geoSubTabContentChoice {
+            margin: 0px;
+            color: rgba(79, 79, 79, 0.6);
+        }
+
+        .geoSubTabTitle {
+            font-size: 0.7rem;
+            color: #ffffff;
+            display: flex;
+            text-decoration: none;
+            margin: 0px;
+        }
+
+        .geoSubTabContentChoiceDivWrap {
+            flex-direction: row;
+            display: flex;
+            align-items: center;
+        }
+
+        .geoSubTabContentChoiceBox {
+            background-color: #dee3e7;
+            width: 10px;
+            height: 10px;
+            display: inline-block;
+            margin-right: 10px;
+            margin-left: 20px;
+        }
+
+
+
+
+    </style>
+</head>
+<body>
+
+<!-- Create an element where the map will take place -->
+<div id="windGlyphBlockDiv" style="position:fixed; display: none; z-index: 2" onclick="windGlyphBlockDivOnClk()"></div>
+<div id="geoTooltip" class="seedTooltip" style="height: fit-content; width: 250px; padding-left: 1rem; padding-right: 1rem; display: none; z-index: 3">
+<!--    <p id="geoCountryName">USA</p>-->
+    <p id="geoCTDCCases" style="font-size: 1.5rem; margin-bottom: 0px; font-weight: bold">192</p>
+    <p style="font-size: 0.7rem; margin-bottom: 0px" > cases in these countries</p>
+    <div>
+        <div class="divider-flex" style="position: relative; top: 34px"></div>
+        <div id="geoTpSvgDiv" style="display: flex; flex-direction: row; max-width: 175px; overflow: auto; padding-bottom: 20px;">
+        </div>
+
+<!--        <d-->
+    </div>
+</div>
+
+<div>
+    <svg id="svgCTDCMap"></svg>
+    <div style="position:relative; top: -8rem">
+        <div style="display: flex; justify-content: center;">
+            <div id="geoSubTabContentDiv" style="display: flex; flex-direction: row; justify-content: center; visibility: hidden"  onmouseover="showSubTabContent()" onmouseleave="hideSubTabContent()" >
+                <!--YEAR-->
+                <div class="geoSubTabContent" style="border-top-left-radius: 0.3rem">
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-top: 10px" onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2002)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2002 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2003)">
+                        <div class="geoSubTabContentChoiceBox " style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2003 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2004)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2004 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2005)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2005 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2006)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2006 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2007)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2007 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2008)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2008 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2009)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2009 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2010)" >
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2010 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2011)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2011 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2012)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2012 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2013)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2013 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2014)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2014 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2015)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2015 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2016)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2016 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2017)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2017 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2018)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2018 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2019)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2019 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2020)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2020 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-bottom: 10px" onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'year', 2021)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">2021 </p>
+                    </div>
+                </div>
+
+                <!--GENDER-->
+                <div class="geoSubTabContent" style="width: 120px">
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-top: 10px"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'gender', 0)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">Male </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'gender', 1)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">Female </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-bottom: 10px" onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'gender', 2)">
+                        <div class="geoSubTabContentChoiceBox"  style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">Unknown </p>
+                    </div>
+                </div>
+
+                <!--AGE-->
+                <div class="geoSubTabContent" style="width: 120px">
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-top: 10px"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 0)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 0 - 8 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 1)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 9 - 17 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 2)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 18 - 20 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 3)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 21 - 23 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 4)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 24 - 26 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 5)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 27 - 29 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 6)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 30 - 38 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 7)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 39 - 47 </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 8)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> 48 + </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-bottom: 10px" onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'age', 9)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice"> Unknown </p>
+                    </div>
+                </div>
+
+                <!--means of control-->
+                <div class="geoSubTabContent" style="width: 220px">
+                    <div id = "meansOfCrlContent0" class="geoSubTabContentChoiceDivWrap" style="margin-top: 10px"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 0)">
+                        <div class="geoSubTabContentChoiceBox" style="background-color: #7da9cc"></div>
+                        <p class="geoSubTabContentChoice">Restricts Movement</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 1)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Threats</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 2)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Uses Children</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 3)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Debt Bondage</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 4)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Takes Earnings</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 5)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">False Promises</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 6)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Sexual Abuse</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 7)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Physical Abuse</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 8)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Psychological Abuse</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 9)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Withholds Documents</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 10)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Withholds Necessities</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 11)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Restricts Medical Care</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 12)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Excessive Working Hours</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 13)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Psychoactive Substances</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 14)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Restricts Financial Access</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 15)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Threat Of Law Enforcement</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-bottom: 10px" onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))" onclick="mouseclickTabContent(d3.select(this), 'means', 16)">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Other</p>
+                    </div>
+                </div>
+
+                <!--type of exploit-->
+                <div class="geoSubTabContent" style="width: 190px">
+
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-top: 10px"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Sexual Exploit </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice">Forced Labour</p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Forced Military </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Organ Removal </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Sex And Labour </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Forced Marriage </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Slavery And Practices </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-bottom: 10px" onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Other </p>
+                    </div>
+                </div>
+
+                <!--type of labour-->
+                <div class="geoSubTabContent">
+
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-top: 10px"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Begging </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Peddling </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Hospitality </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Agriculture </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Aquafarming </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Construction </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Illicit Activities </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Manufacturing </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Transportation </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Domestic Work </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Mining Or Drilling </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-bottom: 10px" onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Other </p>
+                    </div>
+                </div>
+
+
+                <div class="geoSubTabContent" style="border-top-right-radius: 0.3rem; width: 230px">
+                    <div class="geoSubTabContentChoiceDivWrap" style="margin-top: 10px"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Pornography </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Prostitution </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Private Sexual Services </p>
+                    </div>
+
+                    <div class="geoSubTabContentChoiceDivWrap"  onmouseover="mouseoverTabContent(d3.select(this))" onmouseleave="mouseleaveTabContent(d3.select(this))">
+                        <div class="geoSubTabContentChoiceBox"></div>
+                        <p class="geoSubTabContentChoice"> Remote Interactive Services </p>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: center;">
+            <div style="display: flex; flex-direction: row; justify-content: center;"  onmouseover="showSubTabContent()" onmouseleave="hideSubTabContent()">
+                <div id="geoSubTabLeftMost" class="geoSubTab" style="border-bottom-left-radius: 0.3rem; border-top-left-radius: 0.3rem">
+                    <p class="geoSubTabTitle"> YEAR </p>
+                </div>
+                <div class="geoSubTab" style="width: 120px">
+                    <p class="geoSubTabTitle"> GENDER  </p>
+                </div>
+                <div class="geoSubTab" style="width: 120px">
+                    <p class="geoSubTabTitle"> AGE  </p>
+                </div>
+                <div class="geoSubTab" style="width: 220px">
+                    <p class="geoSubTabTitle"> MEANS OF CONTROL </p>
+                </div>
+                <div class="geoSubTab" style="width: 190px">
+                    <p class="geoSubTabTitle"> TYPE OF EXPLOIT </p>
+                </div>
+                <div class="geoSubTab">
+                    <p class="geoSubTabTitle"> TYPE OF LABOUR </p>
+                </div>
+                <div id="geoSubTabRightMost" class="geoSubTab" style="border-bottom-right-radius: 0.3rem; border-top-right-radius: 0.3rem; width: 230px">
+                    <p class="geoSubTabTitle"> TYPE OF SEX </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--各种函数-->
+<script>
+    var yearSelected = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+    var genderSelected = [1, 1, 1]; //Male, Female, Unknown
+
+    var ageBroadSelected = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+    var ageBroadStr = ["0--8", "9--17", "18--20", "21--23", "24--26", "27--29", "30--38", "39--47", "48", ""]
+
+    var meansOfControlStr =
+        ["meansOfControlRestrictsMovement",
+            "meansOfControlThreats",
+            "meansOfControlUsesChildren",
+            "meansOfControlDebtBondage",
+            "meansOfControlTakesEarnings",
+            "meansOfControlFalsePromises",
+            "meansOfControlSexualAbuse",
+            "meansOfControlPhysicalAbuse",
+            "meansOfControlPsychologicalAbuse",
+            "meansOfControlWithholdsDocuments",
+            "meansOfControlWithholdsNecessities",
+            "meansOfControlRestrictsMedicalCare",
+            "meansOfControlExcessiveWorkingHours",
+            "meansOfControlPsychoactiveSubstances",
+            "meansOfControlRestrictsFinancialAccess",
+            "meansOfControlThreatOfLawEnforcement",
+            ["meansOfControlNotSpecified", "meansOfControlOther"]]
+
+    var meansOfControlSelected = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+    //判断某一个数据条目是否在选择范围内
+    var isSelected = function (data){
+        // data[i].meansOfControlRestrictsMovement!="0" && data[i].meansOfControlRestrictsMovement!=""
+        // let selected = true;
+        //判断year的属性
+        if(yearSelected[data.yearOfRegistration - 2002] == 0)
+            return false;
+
+        //判断gender的属性
+        if( (data.gender == "Male" && genderSelected[0] == 0) || (data.gender == "Female" && genderSelected[1] == 0) || (data.gender == "" && genderSelected[2] == 0) )
+            return false;
+
+        //判断age的属性
+        for(let i = 0; i <= 9; i++)
+        {
+            if(data.ageBroad == ageBroadStr[i] && ageBroadSelected[i] == 0)
+                return false;
+        }
+
+        //判断meansofControl属性
+        for (let i = 0; i <= 15; i++)
+        {
+            if(meansOfControlSelected[i] == 1 && (data[meansOfControlStr[i]] == "0" || data[meansOfControlStr[i]] == ""))
+                return false;
+        }
+        if(meansOfControlSelected[16] == 1 && ((data[meansOfControlStr[16][0]] == "0" || data[meansOfControlStr[16][0]] == "") && (data[meansOfControlStr[16][1]] == "0" || data[meansOfControlStr[16][1]] == "")))
+            return false;
+
+        return true;
+    }
+
+
+    //给数字添加千分的逗号
+    var addSemi = function (num){
+        let numStr = num.toString();
+        let cnt = 0;
+        let resLst = [];
+
+        for(let i = numStr.length - 1; i >= 0 ; i--){
+
+            resLst.push(numStr[i]);
+            cnt += 1;
+            if (cnt % 3 == 0)
+            {
+                cnt = 0;
+                resLst.push(',');
+            }
+        }
+
+        let res = "";
+        for(let i = resLst.length - 1; i >= 0 ; i--){
+            res += resLst[i];
+        }
+        if(res[0] == ",")
+            res = res.substring(1,);
+        return res;
+    }
+
+    var isWindGlyphTpFixed = false;
+    var windGlyphBlockDivOnClk = function (){
+        isWindGlyphTpFixed = false;
+        d3.select("#windGlyphBlockDiv")
+            .style("display", "none");
+        d3.select("#geoTooltip")
+            .style("display", "none");
+        d3.selectAll(".geoCircles")
+            // .transition()
+            // .duration(500)
+            .attr("opacity", 1);
+
+        d3.selectAll(".countryMap")
+            .style("fill-opacity", .35)
+            .style("stroke", "none");
+    }
+
+    var showSubTabContent = function () {
+        d3.select("#geoSubTabContentDiv")
+            .style("visibility", "visible")
+
+        d3.select("#geoSubTabRightMost")
+            .transition()
+            .duration(200)
+            .style("border-top-right-radius", "0.1rem")
+        d3.select("#geoSubTabLeftMost")
+            .transition()
+            .duration(200)
+            .style("border-top-left-radius", "0.1rem")
+    }
+
+    var hideSubTabContent = function () {
+        d3.select("#geoSubTabContentDiv")
+            .style("visibility", "hidden")
+
+        d3.select("#geoSubTabRightMost")
+            .transition()
+            .duration(200)
+            .style("border-top-right-radius", "0.3rem")
+        d3.select("#geoSubTabLeftMost")
+            .transition()
+            .duration(200)
+            .style("border-top-left-radius", "0.3rem")
+    }
+
+    var mouseoverTabContent = function (a) {
+        a.style("background", "rgba(114,125,131,0.3)")
+    }
+
+    var mouseleaveTabContent = function (a) {
+        a.style("background", "rgba(176,190,197,0)")
+    }
+
+    var mouseclickTabContent = function (ele, str, id){
+
+        //变换选中框的颜色，并且更新数组
+        if(str == "year")
+        {
+            if(yearSelected[id - 2002] == 1)
+            {
+                ele.select("*").style("background-color", "#dee3e7");
+                yearSelected[id - 2002] = 0;
+            }
+            else
+            {
+                ele.select("*").style("background-color", "#7da9cc");
+                yearSelected[id - 2002] = 1;
+            }
+        }
+        else if(str == "gender"){
+            if(genderSelected[id] == 1)
+            {
+                ele.select("*").style("background-color", "#dee3e7");
+                genderSelected[id] = 0;
+            }
+            else
+            {
+                ele.select("*").style("background-color", "#7da9cc");
+                genderSelected[id] = 1;
+            }
+        }
+        else if (str == "age"){
+            if(ageBroadSelected[id] == 1)
+            {
+                ele.select("*").style("background-color", "#dee3e7");
+                ageBroadSelected[id] = 0;
+            }
+            else
+            {
+                ele.select("*").style("background-color", "#7da9cc");
+                ageBroadSelected[id] = 1;
+            }
+        }
+        else if(str == "means"){
+            if(meansOfControlSelected[id] == 1)
+            {
+                ele.select("*").style("background-color", "#dee3e7");
+                meansOfControlSelected[id] = 0;
+            }
+            else
+            {
+                ele.select("*").style("background-color", "#7da9cc");
+                meansOfControlSelected[id] = 1;
+            }
+        }
+
+
+
+
+
+        geneFinalCTDCData()
+
+    }
+
+
+
+    /*
+
+    * startNum 代表要跳动的初始数字
+
+    * targetNum 代表要跳动到的数字
+
+    * time  代表要跳动需要花费的时间
+
+    * selector 代表要跳动元素的选择器
+
+    */
+
+    const $setJumpNumber = (startNum, targetNum, time = 1, selector) => {
+
+        let dom = document.querySelector(selector);
+
+        let originNum = startNum;
+
+        let stepNum = 0;
+
+        let timeNum = time;
+
+        dom.innerHTML = startNum;
+
+        let timeId = setInterval(() => {
+
+            if (originNum < targetNum) {
+
+                timeNum -= 0.001;
+
+                let strNum = originNum.toString();
+
+                // 数字比较少的时候直接用 + 1; 数字很大直接 +1 要很久才能调到最对应的数字，所有后三位数随机跳动的方式进行模拟生成
+
+                if (targetNum.toString().length < 6) {
+
+                    stepNum += 1; // 这样才可以实现越跳越快的效果
+
+                    originNum = originNum + stepNum;
+
+                    dom.innerHTML = addSemi(originNum);
+
+                } else {
+
+                    stepNum += 500; // 这样才可以实现越跳越快的效果
+
+                    originNum = originNum + stepNum;
+
+                    dom.innerHTML = addSemi(strNum.substr(0, strNum.length - 3) + Math.floor(Math.random()*10) + Math.floor(Math.random()*10) + Math.floor(Math.random()*10));
+
+                }
+
+            } else {
+
+                dom.innerHTML = addSemi(targetNum);
+
+                clearInterval(timeId);
+
+            }
+
+        }, timeNum);
+
+    };
+    //
+    // function start () {
+    //     $setJumpNumber(1, 2300, 20, '#number');
+    //
+    // };
+
+</script>
+
+<script>
+
+    d3.select("#windGlyphBlockDiv")
+        .style("width", `${0.9 * window.innerWidth}px`)
+        .style("height", `${0.9 * window.innerHeight}px`)
+        .style("top", `${0.05 * window.innerHeight}px`)
+        .style("left", `${0.05 * window.innerWidth}px`);
+
+    d3.select("#svgCTDCMap")
+        .attr("width", 0.8 * window.innerWidth)
+        .attr("height", 0.8 * window.innerHeight)
+        .attr("transform", `translate(${0.1 * window.innerWidth}, ${0.05 * window.innerHeight})`);
+
+    // The svg
+    const geoSvg = d3.select("svg"),
+        width = +geoSvg.attr("width"),
+        height = +geoSvg.attr("height");
+
+    const mapSvg = geoSvg.append("g").attr("id", "mapSvg");
+
+    const windGlyphSvg = geoSvg.append("g").attr("id", "windGlyphSvg");
+
+    const windBlockSvg = geoSvg.append("g").attr("id", "windBlockSvg");
+
+
+
+    // Map and projection
+    const projection = d3.geoMercator()
+        .center([0,20])                // GPS of location to zoom on
+        .scale(200)                       // This is like the zoom
+        .translate([ width/2, height/2 ])
+
+
+    //读取国家iso code以及坐标数据
+    var isoCordData = {};
+    var isoA3toA2 = {};
+    //读取CTDC数据
+    //[{isocode: 'DE', homelat: '40.2', homelon: '-74.8', homecontinent: 'North America', n: '33377'}, ... ]
+    var geoCTDCData = {};
+    var finalCTDCData = [];
+
+
+
+    //kmeans均值算法
+    const kMeans = (data, k = 1) => {
+        const centroids = data.slice(0, k);
+        const distances = Array.from({ length: data.length }, () =>
+            Array.from({ length: k }, () => 0)
+        );
+        const classes = Array.from({ length: data.length }, () => -1);
+        let itr = true;
+
+        while (itr) {
+            itr = false;
+
+            for (let d in data) {
+                for (let c = 0; c < k; c++) {
+                    distances[d][c] = Math.hypot(
+                        ...Object.keys(data[0]).map(key => data[d][key] - centroids[c][key])
+                    );
+                }
+                const m = distances[d].indexOf(Math.min(...distances[d]));
+                if (classes[d] !== m) itr = true;
+                classes[d] = m;
+            }
+
+            for (let c = 0; c < k; c++) {
+                centroids[c] = Array.from({ length: data[0].length }, () => 0);
+                const size = data.reduce((acc, _, d) => {
+                    if (classes[d] === c) {
+                        acc++;
+                        for (let i in data[0]) centroids[c][i] += data[d][i];
+                    }
+                    return acc;
+                }, 0);
+                for (let i in data[0]) {
+                    centroids[c][i] = parseFloat(Number(centroids[c][i] / size).toFixed(2));
+                }
+            }
+        }
+
+        return classes;
+    };
+
+    var isMapDrawn = false;
+
+    //绘制地图的函数
+    var drawMapData = function (finalData){
+        Promise.all([
+            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+            // d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_gpsLocSurfer.csv")
+        ]).then(function (initialize) {
+            // console.log(finalData.length)
+
+            let dataGeo = initialize[0]
+            // let data = initialize[1]
+            // Create a color scale
+            // const color = d3.scaleOrdinal()
+            //     .domain(data.map(d => d.homecontinent))
+            //     .range(d3.schemePaired);
+
+            // Add a scale for bubble size
+            const valueExtent = d3.extent(finalData, d => +d.n)
+
+            const size = d3.scaleSqrt()
+                .domain(valueExtent)  // What's in the data
+                .range([1, 50])  // Size in pixel
+
+            // let windGlyphIndex = 0;
+
+
+            if(isMapDrawn == false)
+            {
+                // 地图绘制
+                mapSvg.append("g")
+                    .selectAll("path")
+                    .data(dataGeo.features)
+                    .join("path")
+                    .attr("fill", "#373b4f")
+                    .style("fill-opacity", .35)
+                    .attr("d", d3.geoPath()
+                        .projection(projection)
+                    )
+                    .attr("id", d => isoA3toA2[d.id])
+                    .attr("class", "countryMap")
+                    .style("stroke", "none");
+
+                isMapDrawn = true;
+            }
+
+            //清空windGlyph以及blockDiv的内容
+            d3.select("#windGlyphSvg").selectAll("*").remove();
+            d3.select("#windBlockSvg").selectAll("*").remove();
+
+
+
+
+            let windGlyphWid = 598.08;
+            let windGlyphHei = 368.3;
+            let windGlyphScale = d3.scaleSqrt()
+                .domain(valueExtent)
+                .range([.03, 0.3])
+
+
+
+            // Add group for svg:
+            windGlyphSvg
+                .selectAll(".geoCircles")
+                .data(finalData) //.sort((a,b) => +b.n - +a.n).filter((d,i) => i<1000)
+                .enter()
+                .append("g") //circle
+                .attr("cx", d => d.cx) //d => projection([+d.homelon, +d.homelat])[0]
+                .attr("cy", d => d.cy) //d => projection([+d.homelon, +d.homelat])[1]
+                // .attr("r", d => size(+d.n))
+                .attr("id", function (d, i){
+
+                    return `geoWindGlyph${i}`
+                }) //d=> {if (d.n>2000) {return "black"} else {return "none"}  }
+                .attr("class", "geoCircles")
+                // .style("fill", "#ff3672")
+                // .attr("stroke", "none") //d=> {if (d.n>2000) {return "black"} else {return "none"}  }
+                // .attr("stroke-width", 1)
+                .attr("transform", d => `translate(${d.cx - windGlyphWid * windGlyphScale(+d.n) / 2}, ${ d.cy - windGlyphHei * windGlyphScale(+d.n) / 2}), scale(${windGlyphScale(+d.n)})`)
+                // .attr("r", d => size(+d.n))
+
+                // .transition()
+                // .duration(1000)
+                // .attr("fill-opacity", .4);
+
+            //添加隐形矩形，作为svg悬停的响应
+            windBlockSvg
+                .append("g")
+                .selectAll(".invisiRectWindGlyph")
+                .data(finalData)
+                .enter()
+                .append("rect")
+                .attr("x", d => d.cx - windGlyphWid * windGlyphScale(+d.n) / 2)
+                .attr("y", d => d.cy - windGlyphHei * windGlyphScale(+d.n) / 2)
+                .attr("width", d => windGlyphWid * windGlyphScale(+d.n))
+                .attr("height", d => windGlyphHei * windGlyphScale(+d.n))
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", function (event, d){
+                    // d3.select(this)
+                    //     //.style("stroke", "black")
+                    //     .style("opacity", 1)
+                    // console.log(d)
+                    let cx = d3.select(`#geoWindGlyph${d.id}`).attr("cx");
+                    let cy = d3.select(`#geoWindGlyph${d.id}`).attr("cy");
+                    // let r = d3.select(this).attr("r");
+                    let transform = d3.select(`#geoWindGlyph${d.id}`).attr("transform");
+
+                    d3.selectAll(".geoCircles")
+                        // .transition()
+                        // .duration(500)
+                        .attr("opacity", .3);
+
+                    d3.select(`#geoWindGlyph${d.id}`)
+                        .attr("opacity", 1)
+                    // .attr("stroke-width", 5)
+                    // .transition()
+                    // .duration(2000)
+                    // .attr("transform", transform.split("scale")[0] + `scale(1)`)
+
+                    d3.select("#geoTooltip")
+                        .style("display", "block")
+                        .style("left", `${cx - windGlyphWid * windGlyphScale(+d.n) / 2 + 0.1 * window.innerWidth - 340}px`) //
+                        .style("top", `${cy - 30}px`); //${cy}
+
+                    // d3.select("#geoCountryName")
+                    //     .html(d.country);
+
+                    // d3.select("#geoCTDCCases")
+                    //     .html(addSemi(d.n));
+                    $setJumpNumber(1, d.n, 15, "#geoCTDCCases");
+
+
+                    //属于此类的国家地图轮廓高亮
+                    let countries = d.iso; //["AE", "AU", "RF", ...]
+                    let countCases = d.cases; // [12, 30, 50, ...]
+                    //其他国家颜色变淡
+                    d3.selectAll(".countryMap")
+                        .style("fill-opacity", .1)
+
+
+
+                    let tpDiv = "";
+                    let casesScale = d3.scaleLinear()
+                        .domain(d3.extent(countCases))
+                        .range([80, 10]);
+                    let tpDivCountries = [];
+
+                    let colGraphNumScale = d3.scaleLinear()
+                        .domain(d3.extent(countCases))
+                        .range([70, 0]);
+
+                    for(let k in countries)
+                    {
+                        //选中国家高亮
+                        d3.select(`#${countries[k]}`)
+                            .style("fill-opacity", .35)
+                            .style("stroke", "#FFCA36")
+                            .style("stroke-opacity", .4)
+                            .style("stroke-width", "1.4");
+
+                        //Tooltip添加三角形柱状图
+                        tpDiv +=
+                            `
+                              <div style="display: flex; align-items: center; flex-direction: column; width: 50px">
+                                <div id="${countries[k]}ColGraphNum" style="opacity: .6; display: block; visibility: hidden; font-size: 0.5em; position: relative; top: ${colGraphNumScale(countCases[k])}px">${countCases[k]}</div>
+                                <svg id="${countries[k]}ColGraph" width="50px" height="100px" style="margin-bottom: 4px;">
+                                    <polygon class="triangle" stroke-linejoin="round" points="25,${casesScale(countCases[k])} 10,90 40,90"/>
+                                </svg>
+                                <img src="asset/svg/flags/${countries[k]}.svg">
+                                <div id="${countries[k]}ColGraphName" style="opacity: .6; display: block; visibility: hidden; font-size: 0.5em; margin-top: 4px">${isoCordData[countries[k]][2]}</div>
+                              </div>`
+
+                    }
+
+                    document.getElementById("geoTpSvgDiv")
+                        .innerHTML = tpDiv;
+
+                    //先将tpDiv的元素放到DOM内，再进行悬停事件的绑定
+                    for(let k in countries)
+                    {
+                        d3.select(`#${countries[k]}ColGraph`)
+                            .on("mouseover", function (event, d){
+                                d3.select(`#${countries[k]}ColGraphNum`)
+                                    .style("visibility", "visible");
+                                d3.select(`#${countries[k]}ColGraphName`)
+                                    .style("visibility", "visible");
+                            })
+                            .on("mouseleave", function (event, d){
+                                d3.select(`#${countries[k]}ColGraphNum`)
+                                    .style("visibility", "hidden");
+                                d3.select(`#${countries[k]}ColGraphName`)
+                                    .style("visibility", "hidden");
+                            })
+                    }
+
+                })
+                .on("click", function (){
+                    d3.select("#windGlyphBlockDiv")
+                        .style("display", "block");
+                    isWindGlyphTpFixed = true;
+                    console.log(122222)
+
+                })
+                .on("mouseleave", function (){
+                    if (!isWindGlyphTpFixed)
+                    {
+                        d3.select("#geoTooltip")
+                            .style("display", "none");
+                        d3.selectAll(".geoCircles")
+                            // .transition()
+                            // .duration(500)
+                            .attr("opacity", 1);
+
+                        d3.selectAll(".countryMap")
+                            .style("fill-opacity", .35)
+                            .style("stroke", "none");
+                    }
+
+
+                })
+
+
+
+            for(let i = 0; i < finalData.length; i++)
+            {
+                d3.xml("asset/svg/wind4.svg")
+                    .then(data => {
+                        d3.select(`#geoWindGlyph${i}`).node().append(data.documentElement)
+                    });
+            }
+
+
+        });
+    };
+
+    //产出finalCTDCData的函数
+    var geneFinalCTDCData = function (){
+        geoCTDCData = {};
+        finalCTDCData = [];
+
+        d3.csv("asset/csv/CTDC.csv").then(function (data) {
+
+            //筛选数据
+            for(let i = 0; i < data.length; i++)
+            {
+                if(isSelected(data[i]))
+                {
+                    if(data[i]["citizenship"] in geoCTDCData)
+                    {
+                        geoCTDCData[data[i]["citizenship"]] += 1;
+                    }else{
+                        geoCTDCData[data[i]["citizenship"]] = 1;
+                    }
+                }
+            }
+
+            let geoCTDCDataIso = Object.keys(geoCTDCData) // ["AE", "ED", "AF", ...]
+            let geoCTDCDataCases = Object.values(geoCTDCData) // [1, 10, 20, ...]
+
+            //数据从大到小排序
+            let geoCTDCDataIsoCases= [];
+            for(let i in geoCTDCDataIso)
+            {
+                let temp = {};
+                temp["iso"] = geoCTDCDataIso[i];
+                temp["cases"] = geoCTDCDataCases[i];
+                geoCTDCDataIsoCases.push(temp);
+            }
+            geoCTDCDataIsoCases.sort((a, b) => b.cases - a.cases);
+
+            geoCTDCDataIso = [];
+            geoCTDCDataCases = [];
+            for(let i in geoCTDCDataIsoCases)
+            {
+                geoCTDCDataIso.push(geoCTDCDataIsoCases[i]["iso"]);
+                geoCTDCDataCases.push(geoCTDCDataIsoCases[i]["cases"]);
+            }
+
+
+
+            //geoCTDCData = {"AE": 1, "ED": 10, ...}
+            //["AE", "ED", "AF", ...]
+            //[1, 10, 20, ...]
+            //countryCordLst [[1, 2], [3, 4], [5, 6], ...]
+            //countryCordCls [0, 0, 1, ...]
+
+            let countryCordLst = [];
+            for(let i in geoCTDCDataIso)
+            {
+                countryCordLst.push([projection([isoCordData[geoCTDCDataIso[i]][1], isoCordData[geoCTDCDataIso[i]][0]])[0],
+                    projection([isoCordData[geoCTDCDataIso[i]][1], isoCordData[geoCTDCDataIso[i]][0]])[1]])
+            }
+
+            // --------------- //
+            // kmeans计算新质心 //
+            // --------------- //
+            let kmeansCats = 8;
+            let countryCordCls = kMeans(countryCordLst, kmeansCats);
+
+
+            for(let i = 0; i < kmeansCats; i++)
+            {
+                finalCTDCData.push({});
+
+                let casesSum = 0;
+                for(let j = 0; j < countryCordCls.length; j++)
+                {
+                    if(countryCordCls[j] == i)
+                    {
+                        casesSum += geoCTDCDataCases[j];
+
+                        if("iso" in finalCTDCData[i])
+                        {
+                            finalCTDCData[i]["iso"].push(geoCTDCDataIso[j]);
+                            finalCTDCData[i]["cases"].push(geoCTDCDataCases[j]);
+                            finalCTDCData[i]["country"].push(isoCordData[geoCTDCDataIso[j]][2]);
+                            finalCTDCData[i]["cx"] += geoCTDCDataCases[j] * countryCordLst[j][0];
+                            finalCTDCData[i]["cy"] += geoCTDCDataCases[j] * countryCordLst[j][1];
+
+                        }
+                        else
+                        {
+                            finalCTDCData[i]["iso"] = [geoCTDCDataIso[j]];
+                            finalCTDCData[i]["cases"] = [geoCTDCDataCases[j]];
+                            finalCTDCData[i]["country"] = [isoCordData[geoCTDCDataIso[j]][2]];
+                            finalCTDCData[i]["cx"] = geoCTDCDataCases[j] * countryCordLst[j][0];
+                            finalCTDCData[i]["cy"] = geoCTDCDataCases[j] * countryCordLst[j][1];
+
+                        }
+                    }
+                }
+                finalCTDCData[i]["n"] = casesSum;
+                finalCTDCData[i]["cx"] /= casesSum;
+                finalCTDCData[i]["cy"] /= casesSum;
+                finalCTDCData[i]["id"] = i;
+
+            }
+
+
+
+            drawMapData(finalCTDCData);
+        });
+
+    };
+
+    //加载iso代码
+    d3.csv("asset/csv/countries_codes_and_coordinates.csv").then(function (data) {
+        for(let i = 0; i < data.length; i++)
+        {
+            isoCordData[data[i]["Alpha2Code"]] = [data[i]["Latitude"], data[i]["Longitude"], data[i]["Country"]];
+            isoA3toA2[data[i]["Alpha3Code"]] = data[i]["Alpha2Code"]
+        }
+        geneFinalCTDCData();
+    });
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

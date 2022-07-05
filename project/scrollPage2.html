@@ -1,0 +1,4072 @@
+<!--帖子glyph滚动界面的单独设计-->
+
+
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-dispatch@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-quadtree@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-timer@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-force@3"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="js/fisheye/fisheye.js" charset="utf-8"></script>
+
+    <!-- BOOTSTRAP5 最新编译并压缩的 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- 最新编译的 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+
+    <style>
+        html {
+            font-size: 22px; /*rem（font size of the root element）是指相对于根元素的字体大小的单位*/
+        }
+
+        body {
+            background: #FFF9F0;
+        }
+
+        #scrollViewBox {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            height: 50px;
+            width: 100px;
+            box-sizing: border-box; /*改为内侧描边*/
+            background-color: rgba(255, 255, 255, 0.4);
+            border: 2px solid rgba(255, 202, 54, 0.4);
+            border-radius: 10px;
+
+            /*cursor: move;*/
+            /*-webkit-box-shadow: black;*/
+        }
+
+        .seedTooltip {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 5px;
+            width: 300px;
+            /*max-width: 500px;*/
+            /*height: 300px;*/
+
+            -webkit-box-shadow: #c0bbb4 0px 0px 10px;
+            -moz-box-shadow: #c0bbb4 0px 0px 10px;
+            box-shadow: #c0bbb4 0px 0px 10px;
+            border-radius: 8px;
+            background-color: #FFFCF7;
+        }
+
+        .svgDiv {
+            display: inline-flex;
+            line-height: 24px;
+            text-align: center;
+            height: 24px;
+            vertical-align: top
+        }
+
+        .divider-flex {
+            height: 1px;
+            border-top: 1px solid #e5e5e5;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            /*border-radius: 0.5px;*/
+            text-align: center;
+        }
+
+        .emotionScale {
+            height: 8px;
+            width: 4px;
+            background: none;
+            border: 1px solid #000;
+            position: relative;
+            top: 8px;
+            -webkit-box-shadow: #c0bbb4 0px 0px 6px;
+            -moz-box-shadow: #c0bbb4 0px 0px 6px;
+            box-shadow: #c0bbb4 0px 0px 6px;
+        }
+
+        .tooltip { /*bs5的tooltip样式*/
+            font-size: 0.4em;
+        }
+
+        .tooltip .tooltip-inner {
+            max-width: 152px;
+        }
+
+        .keyEventCir{
+            position: fixed;
+            right: 120px;
+            top: 50px;
+            width: 12px;
+            height: 12px;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            border-bottom-left-radius: 6px;
+            border-top-left-radius: 6px;
+            background: #ffc000;
+        }
+
+        #overlayTooltip{
+            position: fixed;
+            background: #FFF9F0;
+            padding: 0px;
+
+            -webkit-box-shadow: #c0bbb4 0px 0px 10px;
+            -moz-box-shadow: #c0bbb4 0px 0px 10px;
+            box-shadow: #c0bbb4 0px 0px 10px;
+            border-radius: 8px;
+            z-index: 2;
+        }
+        .overlayTooltipcontent{
+            font-size: 0.7em; color: #656565; margin-bottom: 10px; text-align: justify;
+        }
+
+        span.tphighlight{
+            color: #eeb106;
+        }
+
+
+    </style>
+</head>
+<body>
+<!--<div style="height: 300px; width: 100% ">-->
+<!--afds-->
+<!--</div>-->
+
+<!--不可点击部分-->
+<div id="gradRectBg" style="position: fixed; top: 0"></div>
+<div id="gradRectBg2" style="position: fixed; bottom: 0"></div>
+<!--    最后一个div是遮脚线     -->
+<div id="gradRectBg3" style="background: #FFF9F0; position: fixed; bottom: 0"></div>
+
+
+<div style="position: fixed; display: flex; top: 24px; right: 0px; font-size: 0.7em; line-height: 1.2; width: 120px; margin-right: 10px; user-select: none">
+
+    <img src="asset/svg/left_arrow.svg" style="display:inline-flex;width:10px;height:auto;margin-right: 5px" onclick="streamGraphTitlesLeftArr()"/>
+
+    <p id="streamGraphTitle" style="display: inline-flex; margin: 0px; text-align: center; max-width: 90px">number of hot posts</p>
+<!--   "number of hot posts" “times of view”, “times of discussion” and “number of originals-->
+
+    <img src="asset/svg/right_arrow.svg" style="display:inline-flex;width:10px;height:auto;margin-left: 5px" onclick="streamGraphTitlesRightArr()"/>
+
+
+</div>
+<!--右侧滑条-->
+<div id="streamGraphScroll" style="display:block; position: fixed; top:0px; right:20px">
+    <div id="scrollViewBox"></div>
+    <div class="keyEventCir" id="keyEventCir0" style="opacity: 1" onclick="keyEventCirClick(0)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 1 · county level"></div>
+    <div class="keyEventCir" id="keyEventCir1" style="opacity: 0.4" onclick="keyEventCirClick(1)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 2 · county level"></div>
+    <div class="keyEventCir" id="keyEventCir2" style="opacity: 0.4" onclick="keyEventCirClick(2)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 3 · city level"></div>
+    <div class="keyEventCir" id="keyEventCir3" style="opacity: 0.4" onclick="keyEventCirClick(3)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 4 · city level"></div>
+    <div class="keyEventCir" id="keyEventCir4" style="opacity: 0.4" onclick="keyEventCirClick(4)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 5 · provincial level"></div>
+    <div class="keyEventCir" id="keyEventCir5" style="opacity: 0.4" onclick="keyEventCirClick(5)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 6 · provincial level"></div>
+</div>
+
+<!--主体时间线部分-->
+<div id="samaraTimeline" style="margin: 0 auto;">
+
+    <!--    user-select: none; 设置无法选中文字；防止在拖动div操作的时候误操作   -->
+    <div class="seedTooltip" id="seedTooltip" style="display: none; user-select: none; flex-direction: column">
+        <!--display: flex-->
+        <div style="margin: 10px; font-size: 1em; display: flex; align-items: flex-end; flex-wrap: wrap;">
+            <!--            <p style="margin: 0px">-->
+            <!--                <span id="posterName" style="font-weight: bold">@poster</span>-->
+            <!--                <span id="postFollower" style="color: #b7b7b7;font-size: 0.6em"> &nbsp 5.6M followers</span>-->
+            <!--            </p>-->
+            <div id="posterName" style="font-weight: bold; padding-right: 8px; line-height: 1.2;">@poster</div>
+            <div id="postFollower" style="color: #b7b7b7;font-size: 0.6em"> 5.6M followers</div>
+        </div>
+        <div id="postContent"
+             style="font-size: 0.4em; color: #b7b7b7; margin-left: 10px; margin-bottom: 0px; margin-right: 10px; max-height: 160px; overflow:auto;"
+             content="#丰县将对失职渎职工作人员依法依规处理#很明显徐州丰县实力不如西安市，前者撤不了热搜，炸不了号，禁不了言。你看人家西安的骚操作，现在大家是不是都忘了地铁男保安扒光妇女，小伙儿买馒头被打、馒头撒一地，孕妇流产胎死腹中，拖延治疗心脏病患者致死，保安拒绝病人家属探望致父亲死前没见到女儿最后一面，和接诊病人的私立医院受到惩罚被关停整改、而拒诊病人的公立医院却正常营业的事件了？">
+            123123123
+        </div>
+        <div id="emotionScaleDiv"
+             style="margin-left: 10px; margin-right: 10px; margin-top: 10px; display: none; justify-content: space-between; ">
+            <!--display: flex-->
+            <div style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">
+                <div style="font-size: 0.4em; color: #b7b7b7; display: inline">negative</div>
+            </div>
+            <div style="vertical-align: top; display: inline-flex; height: 24px; position: relative">
+                <div class="emotionScale" id="emotionScaleBox"
+                     style="left:160px;position: absolute; margin-top: -1px"></div>
+                <img src="asset/svg/gradient.svg" style="display:inline;width:160px;height:auto;"/>
+            </div>
+            <div style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">
+                <div style="font-size: 0.4em; color: #b7b7b7; display: inline">positive</div>
+            </div>
+        </div>
+        <a id="showFullaTag" href="javascript:void(0);" rel="external nofollow" onclick="showFull()"
+           style="font-size: 0.4em; margin-left: 10px; color: #eeb106; display: inline-flex">show more</a>
+        <p id="postTime" style="font-size: 0.4em; color: #b7b7b7; display: inline-flex; float: right;
+    margin: 10px 30px 0px 10px;">7:23 PM · Apr 14, 2022</p>
+
+
+        <div class="divider-flex"></div>
+        <div style="display: flex; justify-content:center;/*水平居中*/">
+            <div style="display: inline;  margin-left: 20px; margin-right: 20px">
+                <div class="svgDiv">
+                    <img src="asset/svg/retweet.svg" style="display:inline;width:20px;height:20px"/>
+                </div>
+                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">
+                    <div id="postRetweet" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>
+                </div>
+            </div>
+
+            <div style="display: inline; margin-left: 20px; margin-right: 20px">
+                <div class="svgDiv">
+                    <img src="asset/svg/like.svg" style="display:inline;width:20px;height:20px"/>
+                </div>
+                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">
+                    <div id="postLike" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>
+                </div>
+            </div>
+
+            <div style="display: inline;  margin-left: 20px; margin-right: 20px">
+                <div class="svgDiv">
+                    <img src="asset/svg/comment.svg" style="display:inline;width:20px;height:20px"/>
+                </div>
+                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">
+                    <div id="postComment" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--vane的tooltip-->
+    <div class="seedTooltip" id="vaneTooltip"
+         style="left: 150px; display: none; flex-direction: column; user-select: none; z-index: 1; width: 300px">
+
+        <div style="margin: 10px; font-size: 1em; display: flex; align-items: flex-end; flex-wrap: wrap; color: #eeb106">
+            <!--            <p style="margin: 0px">-->
+            <!--                <span id="posterName" style="font-weight: bold">@poster</span>-->
+            <!--                <span id="postFollower" style="color: #b7b7b7;font-size: 0.6em"> &nbsp 5.6M followers</span>-->
+            <!--            </p>-->
+            <div id="vaneTitle" style="font-weight: bold; padding-right: 8px; line-height: 1.2; width: 235px">Key Event · 1</div>
+            <img id="hashtagLinkSvg" src="asset/svg/hashtag2.svg"
+                 style="display:inline; width:26.4px; height:auto; margin-left: 5px" data-toggle="tooltip"
+                 data-placement="right" title="click to jump to related hashtag" onclick="jumpToHashtag()"/>
+
+        </div>
+
+        <!--        <div id="vaneTitle" style="font-size: 0.9em; line-height: 1.2; font-weight: bold; margin: 10px 10px 0px;color: #eeb106"> Key Event · 1 </div>-->
+
+
+        <div id="vaneSubTitle" style="font-size: 0.7em; line-height: 1.2; font-weight: bold; margin: 10px;"> 丰县第一次通报
+        </div>
+        <div id="vaneContent"
+             style="font-size: 0.4em; color: #b7b7b7;margin-left: 10px; margin-right: 10px; max-height: 150px; overflow: auto">
+            发现网民反映“生育八孩女子”相关信息后，丰县县委、县政府迅速成立联合调查组进行全面调查。经初步调查核实，网民反映的女子为杨某侠，1998年8月与丰县欢口镇董某民领证结婚，<span
+                style="color: #818181">不存在拐卖行为</span>。家人和邻居反映，杨某侠经常无故殴打孩子和老人。经医疗机构诊断，杨某侠患有精神疾病，目前，已对其进行救治，并对其家庭开展进一步救助，确保过上温暖的春节。具体情况正在进一步调查核实中。
+        </div>
+
+        <a id="showFullVane" href="javascript:void(0);" rel="external nofollow" onclick="showFullVane()"
+           style="font-size: 0.4em; margin-left: 10px; color: #eeb106; display: inline-flex">show more</a>
+
+        <div style="font-size: 0.4em; color: #b7b7b7; float: right; margin: 10px;">
+            <p id="vaneFrom" style="text-align: right; margin: 3px">中共丰县县委宣传部</p>
+            <p id="vaneDate" style="text-align: right; margin: 3px">Jan 28, 2022</p>
+        </div>
+
+    </div>
+
+    <!--hashtag的tooltip-->
+    <div class="seedTooltip" id="hashtagTooltip"
+         style="left: 150px; display: none; flex-direction: column; user-select: none; z-index: 1; width: 300px">
+
+        <div style="margin: 10px; font-size: 1em; display: flex; align-items: flex-end; flex-wrap: wrap; color: #eeb106">
+            <div id="hashtagGroupNum" style="font-weight: bold; padding-right: 8px; line-height: 1.2;"> Hashtag Group ·
+                1
+            </div>
+            <img id="jumpToKeyEventSvg" src="asset/svg/vane2.svg" style="display:inline; width:26.4px; height:auto; margin-left: 50px"
+                 data-toggle="tooltip" data-placement="right" title="click to jump to related investigation report" onclick="jumpToKeyEvent()"/>
+        </div>
+
+
+        <div id="hashtagGroupSubtitle" style="font-size: 0.7em; line-height: 1.2; margin: 10px; margin-top: 5px"> This
+            hashtag group contains hashtags related to key event 1 (the first announcement of Fengxian)
+        </div>
+        <div id="hashtagGroupInclude"
+             style="font-size: 0.4em; color: #b7b7b7;margin-left: 10px; margin-right: 10px; max-height: 150px; overflow: auto">
+            included hashtags:<br>
+            #丰县辟谣被拴破屋八孩母亲系拐卖 <br>
+            #丰县回应八孩母亲被拴破屋 <br>
+            #江苏丰县回应八孩母亲被拴破屋 <br>
+            #官方回应八孩母亲被拴破屋疑遭家暴 <br>
+            #官方回应徐州八孩母亲被拴破屋 <br>
+            #官方通报生育八孩女子情况 <br>
+            #丰县官方通报生育八孩女子情况 <br>
+            #官方通报徐州丰县生育八孩女子情况 <br>
+            #官方救治江苏八孩母亲 <br>
+            #江苏丰县回应生育八孩女子情况 <br>
+            #官方通报丰县生育8孩女子事件 <br>
+        </div>
+
+        <a id="showFullHashtag" href="javascript:void(0);" rel="external nofollow" onclick="showFullHashtag()"
+           style="font-size: 0.4em; margin-left: 10px; color: #eeb106; display: inline-flex; margin-bottom: 8px">show
+            more</a>
+
+    </div>
+
+    <!--日期div-->
+    <div id="dateDiv" style="position: fixed; font-size: 0.75em; color: #eeb106; user-select: none">
+        Jan 28, 2022
+    </div>
+
+    <!--    隐形div，用于点击seed事件之后阻隔与svg的交互   -->
+    <div id="invisibleBlock" style="display: none; position: fixed;" onclick="blockDivOnClick()"></div>
+
+
+</div>
+
+<div id="windLineBg" style="width: 96%; display: block; position: fixed; z-index: -1"></div>
+<!--z-index设置为-1，不然会影响tooltip的响应-->
+
+<!--more info (tooltip panel) icon -->
+<div>
+    <img id="showTooltipOverlayImg" src="asset/svg/info.svg" style="position:fixed;width:50px; top: 0px; right: 0px" onclick="showTooltipOverlay()"/>
+</div>
+
+<!--覆盖的详细tooltip-->
+<div id="overlayTooltip" style="display: none">
+    <h1 style="font-size: 1.5em; margin: 30px; margin-top: 20px; margin-bottom: 15px; color: #2d2d2d">How to read</h1>
+    <div class="row" style=" margin-left: 30px; margin-right: 30px">
+        <div class="col-lg" style="padding: 0px; padding-right: 30px">
+            <div style="margin-bottom: 40px;">
+                <h2 style="font-size: 1em; color: #2d2d2d"> <img src="asset/svg/hashtag.svg" style="display:inline-flex;width:40px;height:auto;"/> Hashtag groups</h2>
+
+                <p class="overlayTooltipcontent">
+<!--                    There are 8 hashtag groups in total, marked with<img src="svg/hashtag.svg" style="display:inline-flex;width:30px;height:auto;"/>icons. Hover on these icons to see detailed information of each group.-->
+<!--                    Click the <img src="svg/vane2.svg" style="display:inline-flex;width:30px;height:auto;margin-left: 4px; margin-right: 4px"/>  icon on the tooltip to jump to related investigation reports.-->
+<!--                    There is an additional group on the far right, containing posts without hashtags.-->
+                    Corresponding to "8 wisps of wind" mentioned before, posts are categorized into 8 groups by the similarity of their hashtags.
+                    The ninth group on the right is for posts without hashtags.
+                    All the posts from each group are presented in a vertical timeline, the more posts clustered at some time means more discussion under this hashtag topic at the moment.
+                    <br>
+                    Click the hashtag icon to explore details.
+
+                </p>
+
+<!--                <p class="overlayTooltipcontent">-->
+<!--                    Each group has a corresponding vertical timeline, to which posts within this group are attached.-->
+<!--                </p>-->
+
+            </div>
+
+            <div style="margin-bottom: 40px; margin-top: 30px">
+                <h2 style="font-size: 1em"> <img src="asset/svg/vane.svg" style="display:inline-flex;width:46px;height:auto;"/> Investigation reports</h2>
+
+                <p class="overlayTooltipcontent">
+<!--                    While scrolling through the timeline, there are 6 investigation reports from government, which are represented by a wind vane icon<img src="svg/vane.svg" style="display:inline-flex;width:46px;height:auto;"/>.-->
+                    <!--                为什么是kv；官方通报；县级市级不断升级；升级因为舆论推动；顺带解释风向标含义      -->
+<!--                    Hover on these icons to see detailed information of each investigation report. Click the  <img src="svg/hashtag2.svg" style="display:inline-flex;width:28px;height:auto;margin-left: 4px; margin-right: 4px"/>  icon on the tooltip to jump to related hashtag group.-->
+                    <!--            It’s also noteworthy that key events has a close relation with the first six hashtag groups.-->
+
+                    While scrolling the timeline, the report that was released by authorities at that time shows up on the left and next to the posts.
+                    <br>
+                    Click the wind vane icon to see details.
+
+                </p>
+            </div>
+
+            <div style="margin-bottom: 40px; margin-top: 30px">
+                <h2 style="font-size: 1em"> <img src="asset/svg/stream_graph.svg" style="display:inline-flex;height:46px;width:auto;margin-right: 8px"/> Stream graph</h2>
+
+                <p class="overlayTooltipcontent">
+                    The stream graph on the right offers a global view of all hashtag groups throughout 32 days in terms of “number of hot posts”, “times of view”, “times of discussion” and “number of originals”
+                </p>
+
+                <p class="overlayTooltipcontent">
+                    All the investigation reports are represented as circles near the stream graph. Click these circles to directly scroll to corresponding investigation report.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="col-lg" style="padding-left: 30px">
+            <h2 style="font-size: 1em">Samara seeds</h2>
+            <p class="overlayTooltipcontent">
+                Each seed represents a popular Weibo post with the keyword “丰县(Fengxian)” from Jan 28, 2022 to Feb 28, 2022.
+            </p>
+            <div class="row">
+                <div class="col-lg">
+                    <!--follower Tooltip-->
+                    <div style="margin-bottom: 38px">
+                        <p style="font-size: 0.7em; font-weight: bold; margin-bottom: 10px"> Followers </p>
+                        <p class="overlayTooltipcontent"style="font-size: 0.4em">The size of the seed head shows how many followers the poster had at the time.</p>
+                        <div id="followerTooltip"></div>
+                        <div class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 30px; padding-right: 30px">
+                            <p style="display: inline-flex; margin-bottom: 0px">≤10K</p>
+                            <p style="display: inline-flex; margin-bottom: 0px">10K-1M</p>
+                            <p style="display: inline-flex; margin-bottom: 0px">>1M</p>
+                        </div>
+                    </div>
+
+                    <!--retweet Tooltip-->
+                    <div style="margin-bottom: 20px">
+                        <p style="font-size: 0.7em; font-weight: bold; margin-bottom: 10px"> Retweets </p>
+                        <p class="overlayTooltipcontent"style="font-size: 0.4em">The length of the seed stem represents the number of retweets.</p>
+                        <div id="retweetTooltip"></div>
+                        <div class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 30px; padding-right: 30px">
+                            <p style="display: inline-flex; margin-bottom: 0px; user-select: none;">≤500</p>
+                            <div style="display: inline-flex;">
+                                <p style="margin-bottom: 0px; user-select: none;">>500:</p>
+                                <div id="retweetDragBg" style="background: #e5e1d9; opacity: 0.6; width:120px; height:6px; border-radius: 3px; justify-content: center; align-self: center; margin-left: 15px">
+                                    <div id="retweetDragBox" style="position: relative; top: -1px; left: 0px; width: 12px; height: 8px; border-radius: 4px; background: #FFCA36; ">
+                                        <p id="retweetNum" style="position:relative; top: 6px; user-select: none;display: none">500</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!--comment Tooltip-->
+                    <div style="margin-bottom: 20px">
+                        <p style="font-size: 0.7em; font-weight: bold; margin-bottom: 10px"> Comments </p>
+                        <p class="overlayTooltipcontent"style="font-size: 0.4em">The wing pattern shows the number of comments. (hover on the head of seeds to see patterns)</p>
+                        <div id="commentTooltip"></div>
+                        <div class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 30px; padding-right: 30px">
+                            <p style="display: inline-flex; margin-bottom: 0px">≤10</p>
+                            <p style="display: inline-flex; margin-bottom: 0px">10-100</p>
+                            <p style="display: inline-flex; margin-bottom: 0px">>100</p>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <div class="col-lg">
+                    <!--vlevel tooltip-->
+                    <div style="margin-bottom: 20px">
+                        <p style="font-size: 0.7em; font-weight: bold; margin-bottom: 10px"> Account Type </p>
+                        <p class="overlayTooltipcontent"style="font-size: 0.4em">The dots near the seed head indicates Weibo account type of the poster.</p>
+                        <div id="vlevelTooltip"></div>
+                        <div class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 10px; padding-right: 10px">
+                            <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.1</p>
+                            <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.2</p>
+                            <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.3</p>
+                            <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Enterprise Account</p>
+                        </div>
+                    </div>
+
+                    <!--like tooltip-->
+                    <div style="margin-bottom: 20px">
+                        <p style="font-size: 0.7em; font-weight: bold; margin-bottom: 10px"> Likes </p>
+                        <p class="overlayTooltipcontent"style="font-size: 0.4em">The width of the seed wing represents the number of likes.</p>
+                        <div id="likeTooltip"></div>
+                        <div class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 30px; padding-right: 30px">
+                            <p style="display: inline-flex; margin-bottom: 0px; user-select: none;">≤5000</p>
+                            <div style="display: inline-flex;">
+                                <p style="margin-bottom: 0px; user-select: none;">>5000:</p>
+                                <div id="likeDragBg" style="background: #e5e1d9; opacity: 0.6; width:120px; height:6px; border-radius: 3px; justify-content: center; align-self: center; margin-left: 15px">
+                                    <div id="likeDragBox" style="position: relative; top: -1px; left: 0px; width: 12px; height: 8px; border-radius: 4px; background: #FFCA36; ">
+                                        <p id="likeNum" style="position:relative; top: 6px; user-select: none;display: none">5000</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!--emotion Tooltip-->
+                    <div style="margin-bottom: 20px">
+                        <p style="font-size: 0.7em; font-weight: bold; margin-bottom: 10px"> Sentiment </p>
+                        <p class="overlayTooltipcontent"style="font-size: 0.4em">The color of the seed head represents the sentiment of the post text. (hover to see the animation)</p>
+                        <div id="emotionTooltip"></div>
+                        <div class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 30px; padding-right: 30px">
+                            <p style="display: inline-flex; margin-bottom: 0px">negative</p>
+                            <div style="display: inline-flex;">
+                                <div id="emotionDragBg" style="background: #e5e1d9; opacity: 0.6; width:120px; height:6px; border-radius: 3px; justify-content: center; align-self: center; margin: 0px">
+                                    <div id="emotionDragBox" style="position: relative; top: -1px; left: 54px; width: 12px; height: 8px; border-radius: 4px; background: #FFCA36; ">
+                                        <p id="emotionNum" style="position:relative; top: 6px; user-select: none;display: none"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="display: inline-flex; margin-bottom: 0px">positive</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--jump to related hashtag tooltip-->
+<script>
+    $(function () {
+        $("[data-toggle='tooltip']").tooltip();
+
+        //设置tooltip为点击之后隐藏
+        $('[data-toggle="tooltip"]').click(function () {
+            $('[data-toggle="tooltip"]').tooltip("hide");
+
+        });
+
+    });
+</script>
+
+<!--seedtooltip的拖动操作设置-->
+<script>
+    // 拖拽功能(主要是触发三个事件：onmousedown\onmousemove\onmouseup)
+    var drag = document.getElementById('seedTooltip')
+
+    // 点击某物体时，用drag对象即可，move和up是全局区域，也就是整个文档通用，应该使用document对象而不是drag对象(否则，采用drag对象时物体只能往右方或下方移动)
+    drag.onmousedown = function (e) {
+        var e = e || window.event // 兼容ie浏览器
+        var diffX = e.clientX - drag.offsetLeft // 鼠标点击物体那一刻相对于物体左侧边框的距离=点击时的位置相对于浏览器最左边的距离-物体左边框相对于浏览器最左边的距离
+        var diffY = e.clientY - drag.offsetTop
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof drag.setCapture !== 'undefined') {
+            drag.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            var left = e.clientX - diffX
+            var top = e.clientY - diffY
+
+            // 控制拖拽物体的范围只能在浏览器视窗内，不允许出现滚动条
+            if (left < 0) {
+                left = 0
+            } else if (left > window.innerWidth - drag.offsetWidth) {
+                left = window.innerWidth - drag.offsetWidth
+            }
+            if (top < 0) {
+                top = 0
+            } else if (top > window.innerHeight - drag.offsetHeight) {
+                top = window.innerHeight - drag.offsetHeight
+            }
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            drag.style.left = left + 'px'
+            drag.style.top = top + 'px'
+        }
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            console.log('this', this)
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof drag.releaseCapture !== 'undefined') {
+                drag.releaseCapture()
+            }
+        }
+    }
+
+
+</script>
+
+<!--vaneTooltip拖动操作设置-->
+<script>
+    // 拖拽功能(主要是触发三个事件：onmousedown\onmousemove\onmouseup)
+    var dragVane = document.getElementById('vaneTooltip')
+
+    // 点击某物体时，用drag对象即可，move和up是全局区域，也就是整个文档通用，应该使用document对象而不是drag对象(否则，采用drag对象时物体只能往右方或下方移动)
+    dragVane.onmousedown = function (e) {
+        var e = e || window.event // 兼容ie浏览器
+        var diffX = e.clientX - dragVane.offsetLeft // 鼠标点击物体那一刻相对于物体左侧边框的距离=点击时的位置相对于浏览器最左边的距离-物体左边框相对于浏览器最左边的距离
+        var diffY = e.clientY - dragVane.offsetTop
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof dragVane.setCapture !== 'undefined') {
+            dragVane.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            var left = e.clientX - diffX
+            var top = e.clientY - diffY
+
+            // 控制拖拽物体的范围只能在浏览器视窗内，不允许出现滚动条
+            if (left < 0) {
+                left = 0
+            } else if (left > window.innerWidth - dragVane.offsetWidth) {
+                left = window.innerWidth - dragVane.offsetWidth
+            }
+            if (top < 0) {
+                top = 0
+            } else if (top > window.innerHeight - dragVane.offsetHeight) {
+                top = window.innerHeight - dragVane.offsetHeight
+            }
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            dragVane.style.left = left + 'px'
+            dragVane.style.top = top + 'px'
+        }
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            console.log('this', this)
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof dragVane.releaseCapture !== 'undefined') {
+                dragVane.releaseCapture()
+            }
+        }
+    }
+
+
+</script>
+
+<!--隐形div点击事件：收回所有tooltip-->
+<script>
+    var keyEventSelectedId;
+    var isOverlayTooltipShow = false;
+
+    var blockDivOnClick = function () {
+        //如果是overlay Tooltip的收回
+        if(isOverlayTooltipShow)
+        {
+            isOverlayTooltipShow = false;
+
+            d3.select("#overlayTooltip")
+                .style("display", "none");
+
+            if(showFixedTooltip) //如果还有其他tooltip展开的
+            {
+                $("#invisibleBlock")
+                    .css("width", 1480 / 1728 * window.innerWidth)
+                    .css("height", 773.28 / 886 * window.innerHeight)
+                    .css("top", 60 / 886 * window.innerHeight)
+                    .css("left", 110 / 1728 * window.innerWidth)
+                    .css("opacity", 0)
+                    .css("z-index", 0);
+
+
+            }else if(isVaneTooltipFixed)
+            {
+                //如果是点击vane出现tooltip，设置隐形div阻挡vane栏
+                $("#invisibleBlock")
+                    .css("height", 773.28 / 886 * window.innerHeight)
+                    .css("top", 60 / 886 * window.innerHeight)
+                    .css("width", 1550 / 1728 * window.innerWidth)
+                    .css("left", 32 / 1728 * window.innerWidth)
+                    .css("opacity", 0)
+                    .css("z-index", 0)
+
+            }
+            else if(isHashtagTooltipFixed)
+            {
+                //如果是点击hashtag出现tooltip，设置隐形div阻挡hashtag栏
+                $("#invisibleBlock")
+                    .css("width", 1480 / 1728 * window.innerWidth)
+                    .css("height", 850 / 886 * window.innerHeight)
+                    .css("top", 20 / 886 * window.innerHeight)
+                    .css("left", 110 / 1728 * window.innerWidth)
+                    .css("opacity", 0)
+                    .css("z-index", 0)
+
+            }
+            else{
+                $("#invisibleBlock")
+                    .css("display", "none")
+                    .css("opacity", 0)
+                    .css("z-index", 0)
+            }
+            return;
+        }
+
+        //点击其他部分，退出聚焦div模式
+        $("#invisibleBlock").css("display", "none");
+
+        //如果seed内容是展开的，收回
+        if (isShowFull) {
+            showFull();
+        }
+
+        //如果风向标内容是展开的，收回
+        if (isShowFullVane) {
+            showFullVane();
+        }
+
+        //如果hashtag内容是展开的，收回；并且hashtag取消点击状态
+        if (isshowFullHashtag) {
+            showFullHashtag();
+        }
+
+
+        if (isHashtagTooltipFixed) // 如果是话题tooltip的阻挡
+        {
+            //streamGraph取消高亮
+            d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+
+            isHashtagTooltipFixed = false;
+            d3.select("#hashtagTooltip")
+                .style("display", "none");
+
+            //返回图标未选中的样子
+            for(let i = 0; i <=7; i++)
+            {
+                console.log("aa")
+                d3.select(`#hashtagCir${i}`)
+                    .attr("fill", "#FFF9F0")
+                    .attr("opacity", 0);
+
+                //图标变成前景色
+                d3.select(`#hashtag${i}`)
+                    .attr("fill", "#ffc000")
+                    .attr("opacity", 1);
+            }
+        }
+
+        if (isVaneTooltipFixed) // 如果是风向标的阻挡
+        {
+            isVaneTooltipFixed = false;
+            d3.select("#vaneTooltip")
+                .style("display", "none");
+        }
+
+        if (showFixedTooltip) // 如果是因为要阻挡种子
+        {
+            showFixedTooltip = false; //取消显示fixed div
+
+            Tooltip
+                .style("opacity", 0)
+                .style("display", "none")
+                .style("z-index", "-10")
+
+            TooltipLine
+                .style("opacity", 0);
+
+            d3.select(`#emo_grad_end${selectedSeed
+                .attr("id")
+                .split("interactCircle")[1]}`)
+                .transition()
+                .duration(500)
+                .attr("offset", "0.1")
+                .style("stop-opacity", "0")
+
+            d3.select(`#emo_grad_start${selectedSeed
+                .attr("id")
+                .split("interactCircle")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .style("stop-color", d3.select(
+                    `#emo_grad_end${selectedSeed
+                        .attr("id")
+                        .split("interactCircle")[1]}`)
+                    .style("stop-color"));
+
+            d3.selectAll(`.seedleaf${selectedSeed
+                .attr("id")
+                .split("interactCircle")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .attr("opacity", "0.2");
+
+            //seed叶面渐变动画
+            d3.select(`#seedWid${selectedSeed
+                .attr("id")
+                .split("interactCircle")[1]}`)
+                .transition()
+                .duration(500)
+                .style("opacity", "0.2");
+
+            //streamGraph对应地方取消高亮
+            d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+        }
+
+
+        //vane图标背景隐藏
+        d3.select(`#windVaneBg${keyEventSelectedId}`)
+            .attr("opacity", 0);
+        //图标颜色更改
+        d3.select(`#windVaneBody${keyEventSelectedId}`)
+            .attr("fill", "#ffc000")
+
+        d3.select(`#windVaneEye${keyEventSelectedId}`)
+            .attr("fill", "#fff8ef")
+
+        d3.select(`#windVaneWing${keyEventSelectedId}`)
+            .attr("fill", "#fff8ef")
+
+    }
+</script>
+
+<!--隐形div的设置：点击show more之后出现隐形div阻挡鱼眼交互-->
+<!--show more 的点击交互函数-->
+<script>
+    $("#invisibleBlock")
+        .css("width", 1480 / 1728 * window.innerWidth)
+        .css("height", 773.28 / 886 * window.innerHeight)
+        .css("top", 60 / 886 * window.innerHeight)
+        .css("left", 110 / 1728 * window.innerWidth);
+
+    var isShowFull = false;
+    var showFull = function () {
+        if (!isShowFull) //展开全部
+        {
+            //交换长短内容的位置
+            let str = d3.select("#postContent").attr("content");
+
+            d3.select("#postContent")
+                .attr("content", d3.select("#postContent").html());
+
+            d3.select("#postContent")
+                .html(str);
+
+            d3.select("#showFullaTag").html("show less");
+
+            $("#emotionScaleDiv").css("display", "flex");
+
+
+            //处理如果展开内容会超出浏览器视口情况
+            if (document.getElementById("seedTooltip").offsetHeight + parseFloat(d3.select("#seedTooltip").style("top").split("px")[0]) > window.innerHeight)
+                d3.select("#seedTooltip").style("top", `${window.innerHeight - document.getElementById("seedTooltip").offsetHeight - 10}px`)
+
+            isShowFull = true;
+        } else { //收回全部
+            let str = d3.select("#postContent").attr("content");
+
+            d3.select("#postContent")
+                .attr("content", d3.select("#postContent").html());
+
+            d3.select("#postContent")
+                .html(str);
+
+            d3.select("#showFullaTag").html("show more")
+
+            $("#emotionScaleDiv").css("display", "none");
+
+            isShowFull = false;
+        }
+
+    }
+
+    var isShowFullVane = false;
+    //风向标的全部显示
+    var showFullVane = function () {
+        if (!isShowFullVane) {
+            //交换长短内容的位置
+            let str = d3.select("#vaneContent").attr("content");
+
+            d3.select("#vaneContent")
+                .attr("content", d3.select("#vaneContent").html());
+
+            d3.select("#vaneContent")
+                .html(str);
+
+            d3.select("#showFullVane").html("show less");
+
+            isShowFullVane = true;
+        } else {
+
+            //交换长短内容的位置
+            let str = d3.select("#vaneContent").attr("content");
+
+            d3.select("#vaneContent")
+                .attr("content", d3.select("#vaneContent").html());
+
+            d3.select("#vaneContent")
+                .html(str);
+
+            d3.select("#showFullVane").html("show more");
+
+            isShowFullVane = false;
+        }
+    }
+
+    var isshowFullHashtag = false;
+    var showFullHashtag = function () {
+        if (!isshowFullHashtag) {
+            //交换长短内容的位置
+            let str = d3.select("#hashtagGroupInclude").attr("content");
+
+            d3.select("#hashtagGroupInclude")
+                .attr("content", d3.select("#hashtagGroupInclude").html());
+
+            d3.select("#hashtagGroupInclude")
+                .html(str);
+
+            d3.select("#showFullHashtag").html("show less");
+
+            isshowFullHashtag = true;
+        } else {
+            //交换长短内容的位置
+            let str = d3.select("#hashtagGroupInclude").attr("content");
+
+            d3.select("#hashtagGroupInclude")
+                .attr("content", d3.select("#hashtagGroupInclude").html());
+
+            d3.select("#hashtagGroupInclude")
+                .html(str);
+
+            d3.select("#showFullHashtag").html("show more");
+
+            isshowFullHashtag = false;
+        }
+
+    }
+</script>
+
+<!--滑条视口代码-->
+<script>
+    $("#scrollViewBox").css("top", window.innerHeight * 0.08);
+    $("#scrollViewBox").css("height", window.innerHeight * 0.96 / 32);
+</script>
+
+<!--滑动视口支持拖动-->
+<script>
+
+    // 拖拽功能(主要是触发三个事件：onmousedown\onmousemove\onmouseup)
+    var dragViewBox = document.getElementById('scrollViewBox')
+
+    //判断是否在拖动viewBox
+    var isDragViewBox = false;
+
+    // 点击某物体时，用drag对象即可，move和up是全局区域，也就是整个文档通用，应该使用document对象而不是drag对象(否则，采用drag对象时物体只能往右方或下方移动)
+    dragViewBox.onmousedown = function (e) {
+        var e = e || window.event // 兼容ie浏览器
+
+        var diffY = e.clientY - dragViewBox.offsetTop
+
+        var scrollReverseBoxScale = d3.scaleLinear()  // 反向，滚动窗口映射到画布
+            .domain([0.08 * window.innerHeight, (0.94 * window.innerHeight - (window.innerHeight * 0.96 / 32))])
+            .range([0, 31 * 0.98 * window.innerHeight])
+
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof dragViewBox.setCapture !== 'undefined') {
+            dragViewBox.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var top = e.clientY - diffY
+
+            // 控制拖拽物体的范围只能在浏览器视窗内，不允许出现滚动条
+            //0.02和0.98为滚动条背景的高度范围
+            if (top < 0.08 * window.innerHeight) {
+                top = 0.08 * window.innerHeight
+            } else if (top > 0.94 * window.innerHeight - dragViewBox.offsetHeight) {
+                top = 0.94 * window.innerHeight - dragViewBox.offsetHeight
+            }
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            dragViewBox.style.top = top + 'px'
+
+            //更新date显示的时间
+            let minTopDelta = ((0.94 * window.innerHeight - dragViewBox.offsetHeight) - 0.08 * window.innerHeight) / 32;
+            let dateLst = ["Jan 28", "Jan 29", "Jan 30", "Jan 31"]
+            for(let i=1; i<=28; i++)
+                dateLst.push(`Feb ${i}`)
+            dateLst.push("Feb 28")
+
+            d3.select("#dateDiv")
+                .html(dateLst[parseInt((top - 0.08 * window.innerHeight) / minTopDelta)] + " ,2022")
+
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+            window.scrollTo({
+                top: scrollReverseBoxScale(top),
+                behavior: "instant"
+            });
+            scrolledDis = scrollReverseBoxScale(top);
+
+            //正在拖动viewbox
+            isDragViewBox = true;
+        }
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof dragViewBox.releaseCapture !== 'undefined') {
+                dragViewBox.releaseCapture()
+            }
+
+            //停止拖动viewbox
+            isDragViewBox = false;
+        }
+    }
+
+</script>
+
+<!--渐变条绘制-->
+<script>
+    var windlineSvg = d3.select("#windLineBg")
+        .append("svg")
+        .attr("height", window.innerHeight * 0.98)
+        .attr("width", "100%");
+    // .style("top", 0.01 * window.innerHeight)
+
+    //改变fixed元素的上边距
+    $("#windLineBg").css("top", 0.01 * window.innerHeight);
+    $("#windLineBg").css("left", 0.02 * window.innerWidth);
+
+
+    // {
+    //     var gradRectSvg = d3.select("#gradRectBg")
+    //         .append("svg")
+    //         .attr("height", window.innerHeight * 0.1)
+    //         .attr("width", "100%");
+    //     // .style("top", 0.01 * window.innerHeight)
+    //
+    //     //改变fixed元素的上边距
+    //     $("#gradRectBg").css("top", 0);
+    //     $("#gradRectBg").css("left", 0.02 * window.innerWidth);
+    //
+    //     gradRectSvg.append("rect")
+    //         .attr("x", 0)
+    //         .attr("y", 0)
+    //         .attr("width", window.innerWidth)
+    //         .attr("height", window.innerHeight)
+    // }
+
+
+    var windPosX = [];
+    var deltaXOffset = (1 - 0.02 - 120 / 1728) / 10; //0.02是左边距；120/1728是右边距（100是背景条宽度；20是背景条距离右侧边距）；等分为10份
+
+    for (let i = 1; i <= 9; i++) {
+        windPosX.push((i * deltaXOffset) * window.innerWidth)
+    }
+
+    //绘制渐变条
+    {
+        function linearAddStop(gradient) {
+            var stop1 = gradient.append("stop")
+                .attr("offset", "0")
+                .style("stop-color", "#ffca36")
+                .style("stop-opacity", "0");
+
+            var stop2 = gradient.append("stop")
+                .attr("offset", "0.3")
+                .style("stop-color", "#ffca36")
+                .style("stop-opacity", "0.4");
+
+            var stop3 = gradient.append("stop")
+                .attr("offset", "0.5")
+                .style("stop-color", "#ffca36")
+                .style("stop-opacity", "0.5");
+
+            var stop2 = gradient.append("stop")
+                .attr("offset", "0.7")
+                .style("stop-color", "#ffca36")
+                .style("stop-opacity", "0.4");
+
+            var stop1 = gradient.append("stop")
+                .attr("offset", "1")
+                .style("stop-color", "#ffca36")
+                .style("stop-opacity", "0");
+
+        }
+
+        function linearAddStopNoTag(gradient) {
+            var stop1 = gradient.append("stop")
+                .attr("offset", "0")
+                .style("stop-color", "#bebebe")
+                .style("stop-opacity", "0");
+
+            var stop2 = gradient.append("stop")
+                .attr("offset", "0.3")
+                .style("stop-color", "#bebebe")
+                .style("stop-opacity", "0.4");
+
+            var stop3 = gradient.append("stop")
+                .attr("offset", "0.5")
+                .style("stop-color", "#bebebe")
+                .style("stop-opacity", "0.5");
+
+            var stop2 = gradient.append("stop")
+                .attr("offset", "0.7")
+                .style("stop-color", "#bebebe")
+                .style("stop-opacity", "0.4");
+
+            var stop1 = gradient.append("stop")
+                .attr("offset", "1")
+                .style("stop-color", "#bebebe")
+                .style("stop-opacity", "0");
+        }
+
+
+        var defs = windlineSvg.append("defs");
+
+        var windlineGrad = defs.append("linearGradient")
+            .attr("id", "windlineGrad")
+            .attr("gradientUnits", "userSpaceOnUse");
+        linearAddStop(windlineGrad);
+
+        windlineGrad
+            .attr("x1", 0.2 * window.innerWidth)
+            .attr("x2", 0.2 * window.innerWidth)
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight);
+
+
+        var noTagGrad = defs.append("linearGradient")
+            .attr("id", "noTagGrad")
+            .attr("gradientUnits", "userSpaceOnUse");
+        linearAddStopNoTag(noTagGrad);
+
+        noTagGrad
+            .attr("x1", 0.2 * window.innerWidth)
+            .attr("x2", 0.2 * window.innerWidth)
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight);
+
+
+        var wind1 = windlineSvg.append("line")
+            .attr("x1", windPosX[0])
+            .attr("x2", windPosX[0])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + windlineGrad.attr("id") + ")")
+
+        var wind2 = windlineSvg.append("line")
+            .attr("x1", windPosX[1])
+            .attr("x2", windPosX[1])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + windlineGrad.attr("id") + ")")
+
+        var wind3 = windlineSvg.append("line")
+            .attr("x1", windPosX[2])
+            .attr("x2", windPosX[2])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + windlineGrad.attr("id") + ")")
+
+        var wind4 = windlineSvg.append("line")
+            .attr("x1", windPosX[3])
+            .attr("x2", windPosX[3])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + windlineGrad.attr("id") + ")")
+
+        var wind5 = windlineSvg.append("line")
+            .attr("x1", windPosX[4])
+            .attr("x2", windPosX[4])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + windlineGrad.attr("id") + ")")
+
+        var wind6 = windlineSvg.append("line")
+            .attr("x1", windPosX[5])
+            .attr("x2", windPosX[5])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + windlineGrad.attr("id") + ")")
+
+        var wind7 = windlineSvg.append("line")
+            .attr("x1", windPosX[6])
+            .attr("x2", windPosX[6])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + windlineGrad.attr("id") + ")")
+
+        var wind8 = windlineSvg.append("line")
+            .attr("x1", windPosX[7])
+            .attr("x2", windPosX[7])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + windlineGrad.attr("id") + ")")
+
+
+        var wind9NoTag = windlineSvg.append("line")
+            .attr("x1", windPosX[8])
+            .attr("x2", windPosX[8])
+            .attr("y1", 0.05 * window.innerHeight)
+            .attr("y2", 0.95 * window.innerHeight)
+            .attr("stroke-width", "2")
+            .attr("stroke", "url(#" + noTagGrad.attr("id") + ")")
+
+    }
+</script>
+
+<!--绘制时间标识-->
+<script>
+    d3.select("#dateDiv")
+        .style("top", `${0.04 * window.innerHeight}px`)
+        .style("right", `${0.18 * window.innerHeight}px`)
+</script>
+
+<!--绘制主要时间线-->
+<script>
+    var windowHei = window.innerHeight;
+    var windowWid = window.innerWidth;
+
+    //设置主div的宽度
+    $("#samaraTimeline").css("width", windowWid * 0.96);
+
+    var timelineSvg = d3.select("#samaraTimeline")
+        .append("svg")
+        .attr("id", "timelineSvg")
+        .attr("width", "100%") //使用viewBox参数，就不用height width了
+        .attr("height", windowHei * 32 * 0.98)
+
+    var seedGroup = timelineSvg.append("g")
+        .attr("id", "seedGroup"); //存放生成seed的group
+
+    //绘制顶部和底部的过渡渐变矩形
+    {//设置渐变过度条高度
+        $("#gradRectBg").css("width", windowWid * 0.96);
+        $("#gradRectBg").css("left", windowWid * 0.02);
+
+        $("#gradRectBg2").css("width", windowWid * 0.96);
+        $("#gradRectBg2").css("left", windowWid * 0.02);
+
+
+        var gradRectSvg1 = d3.select("#gradRectBg")
+            .attr("id", "gradRectSvg1")
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", 0.12 * windowHei)
+
+        var gradRectSvg2 = d3.select("#gradRectBg2")
+            .attr("id", "gradRectSvg2")
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", 0.1 * windowHei)
+
+        //遮脚线div设置
+        d3.select("#gradRectBg3")
+            .append("svg")
+            .attr("width", 0.92 * windowWid)
+            .attr("height", 0.02 * windowHei)
+            .append("rect")
+            .attr("x", "0")
+            .attr("y", "0")
+            .attr("width", 0.92 * windowWid)
+            .attr("height", 0.02 * windowHei)
+            .attr("fill", "#FFF9F0")
+
+
+        //设置过渡矩形渐变
+        var gradRect1 = defs.append("linearGradient")
+            .attr("id", "gradRect1")
+            .attr("gradientUnits", "userSpaceOnUse")
+            .attr("x1", "0")
+            .attr("x2", "0")
+            .attr("y1", "0")
+            .attr("y2", 0.12 * windowHei);
+
+        gradRect1.append("stop")
+            .attr("offset", "0.5")
+            .style("stop-color", "#FFF9F0")
+            .style("stop-opacity", "1");
+
+        gradRect1.append("stop")
+            .attr("offset", "1")
+            .style("stop-color", "#FFF9F0")
+            .style("stop-opacity", "0");
+
+
+        var gradRect2 = defs.append("linearGradient")
+            .attr("id", "gradRect2")
+            .attr("gradientUnits", "userSpaceOnUse")
+            .attr("x1", "0")
+            .attr("x2", "0")
+            .attr("y1", 0.1 * windowHei)
+            .attr("y2", 0);
+
+        gradRect2.append("stop")
+            .attr("offset", "0.5")
+            .style("stop-color", "#FFF9F0")
+            .style("stop-opacity", "1");
+
+        gradRect2.append("stop")
+            .attr("offset", "1")
+            .style("stop-color", "#FFF9F0")
+            .style("stop-opacity", "0");
+
+
+        //过渡矩形设置
+        gradRectSvg1.append("rect")
+            .attr("x", "0")
+            .attr("y", "0")
+            .attr("width", 0.92 * windowWid)
+            .attr("height", 0.12 * windowHei)
+            .attr("fill", "url(#" + gradRect1.attr("id") + ")")
+
+        gradRectSvg2.append("rect")
+            .attr("x", "0")
+            .attr("y", "0")
+            .attr("width", 0.92 * windowWid)
+            .attr("height", 0.1 * windowHei)
+            .attr("fill", "url(#" + gradRect2.attr("id") + ")")
+    }
+
+
+    var interactCirGroup = timelineSvg.append("g")
+        .attr("id", "interactCirGroup"); //存放生成seed的group
+
+    // var defsSeed = timelineSvg.append("defs");
+    var scrolledDis = 0;
+    var scrollBoxScale = d3.scaleLinear()
+        .domain([0, 31 * 0.98 * window.innerHeight])
+        .range([0.08 * window.innerHeight, (0.94 * window.innerHeight - (window.innerHeight * 0.96 / 32))])
+
+    //svg响应滚动事件
+    timelineSvg.on("wheel", function (d) {
+        {
+            //     // console.log(parseFloat( timelineSvg.attr("viewBox").split(" ")[1]))
+            //     //改变viewBox， 固定渐变条
+            //     // 能够滚动的条件: 不越界，或者越界了但是是往反方向滑动的
+            //     if ((parseFloat(timelineSvg.attr("viewBox").split(" ")[1]) >= 0 && parseFloat(timelineSvg.attr("viewBox").split(" ")[1]) <= 31 * 0.98 * window.innerHeight) || (timelineSvg.attr("viewBox").split(" ")[1] < 0 && d.deltaY > 0) || (parseFloat(timelineSvg.attr("viewBox").split(" ")[1]) > 31 * 0.98 * window.innerHeight && d.deltaY < 0)) {
+            //         //滚动视口改变位置
+            //         scrolledDis += d.deltaY / 2;
+            //         $("#scrollViewBox").css("top", scrollBoxScale(scrolledDis));
+            //
+            //         //改变viewBox
+            //         timelineSvg
+            //             .attr("viewBox", `0 ${parseFloat(timelineSvg.attr("viewBox").split(" ")[1]) + d.deltaY / 2} ${windowWid * 0.96} ${windowHei * 0.98}`);
+            //
+            //         //将背景的wind渐变线固定在原地
+            //
+            //         windlineGrad
+            //             .attr("y1", (parseFloat(wind1.attr("y1")) + d.deltaY / 2).toString())
+            //             .attr("y2", (parseFloat(wind1.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         noTagGrad
+            //             .attr("y1", (parseFloat(wind9NoTag.attr("y1")) + d.deltaY / 2).toString())
+            //             .attr("y2", (parseFloat(wind9NoTag.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //
+            //         wind1.attr("y1", (parseFloat(wind1.attr("y1")) + d.deltaY / 2).toString());
+            //         wind1.attr("y2", (parseFloat(wind1.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         wind2.attr("y1", (parseFloat(wind2.attr("y1")) + d.deltaY / 2).toString());
+            //         wind2.attr("y2", (parseFloat(wind2.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         wind3.attr("y1", (parseFloat(wind3.attr("y1")) + d.deltaY / 2).toString());
+            //         wind3.attr("y2", (parseFloat(wind3.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         wind4.attr("y1", (parseFloat(wind4.attr("y1")) + d.deltaY / 2).toString());
+            //         wind4.attr("y2", (parseFloat(wind4.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         wind5.attr("y1", (parseFloat(wind5.attr("y1")) + d.deltaY / 2).toString());
+            //         wind5.attr("y2", (parseFloat(wind5.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         wind6.attr("y1", (parseFloat(wind6.attr("y1")) + d.deltaY / 2).toString());
+            //         wind6.attr("y2", (parseFloat(wind6.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         wind7.attr("y1", (parseFloat(wind7.attr("y1")) + d.deltaY / 2).toString());
+            //         wind7.attr("y2", (parseFloat(wind7.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         wind8.attr("y1", (parseFloat(wind8.attr("y1")) + d.deltaY / 2).toString());
+            //         wind8.attr("y2", (parseFloat(wind8.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //         wind9NoTag.attr("y1", (parseFloat(wind9NoTag.attr("y1")) + d.deltaY / 2).toString());
+            //         wind9NoTag.attr("y2", (parseFloat(wind9NoTag.attr("y2")) + d.deltaY / 2).toString());
+            //
+            //     }
+        } //原方案：改变viewBox
+        // console.log(d.deltaY)
+    });
+
+</script>
+
+<!--hashtag绘制-->
+<script>
+    let hashtagNodes;
+
+    //读取hashtag相关数据
+    d3.json("asset/json/hashtagGroup.json").then(function (data) {
+
+        hashtagNodes = d3.range(1, 8 + 1).map(function (d, i) {
+            return {
+                event: data[d.toString()]["event"],
+                hashtags: data[d.toString()]["hashtags"],
+            }
+        });
+
+    });
+
+
+    var hashtagTooltip = d3.select("#hashtagTooltip")
+
+    let hashtagTooltipMouseover = function (d) {
+
+        let hashtagGroupIndex;
+
+        if (d3.select(this).attr("id").indexOf("hashtagCir") > -1) // id是hashtagCir__
+        {
+            hashtagGroupIndex = parseInt(d3.select(this).attr("id").split("hashtagCir")[1]);
+
+        } else {
+            hashtagGroupIndex = parseInt(d3.select(this).attr("id").split("hashtag")[1]);
+        }
+
+        //高亮streamGraph
+        d3.selectAll(".myArea").style("opacity", .2) //其他变半透明
+        d3.select(`#streamGraph${hashtagGroupIndex}`)
+            //.style("stroke", "black")
+            .style("opacity", 1)
+
+        //如果是最后两个话题，不显示jump to key event
+        if(hashtagGroupIndex == 6 || hashtagGroupIndex == 7)
+        {
+            d3.select("#jumpToKeyEventSvg")
+                .style("display", "none")
+        }
+        else{
+            d3.select("#jumpToKeyEventSvg")
+                .style("display", "inline")
+        }
+
+        //显示tooltip，定位
+        hashtagTooltip
+            .style("left", `${windPosX[hashtagGroupIndex] - 116}px`)
+            .style("top", `${windowWid * 0.04}px`)
+            .style("display", "block");
+
+        //更改名称：Hashtag Group · X
+        d3.select("#hashtagGroupNum")
+            .html(`Hashtag Group · ${hashtagGroupIndex + 1}`);
+
+        //subtitle内容更新
+        d3.select("#hashtagGroupSubtitle")
+            .html(hashtagNodes[hashtagGroupIndex]["event"]);
+
+        let fullHashtags;
+        let maxNumofHashtag = 4;
+
+        fullHashtags = "included hashtags:<br>"
+        for (let i = 0; i < hashtagNodes[hashtagGroupIndex]["hashtags"].length; i++) {
+            fullHashtags += hashtagNodes[hashtagGroupIndex]["hashtags"][i]
+            fullHashtags += "<br>"
+        }
+        if (hashtagNodes[hashtagGroupIndex]["hashtags"].length <= maxNumofHashtag) { //内容最多显示4条
+            d3.select("#hashtagGroupInclude")
+                .html(fullHashtags)
+                .attr("content", fullHashtags);
+        } else {
+            d3.select("#hashtagGroupInclude")
+                .attr("content", fullHashtags);
+
+            d3.select("#hashtagGroupInclude")
+                .html(function () {
+                    let res;
+
+                    res = "included hashtags:<br>"
+                    for (let i = 0; i < 4; i++) {
+                        res += hashtagNodes[hashtagGroupIndex]["hashtags"][i]
+                        if (i != 3) // 最后不加换行了
+                            res += "<br>"
+                    }
+                    return res;
+
+                })
+        }
+
+
+    }
+
+    var isHashtagTooltipFixed = false;
+
+    let hashtagTooltipMouseleave = function (d) {
+        if (!isHashtagTooltipFixed) {
+            hashtagTooltip
+                .style("display", "none");
+            //streamGraph取消高亮
+            d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+
+        }
+
+
+    }
+
+    let hashtagTooltipMouseClick = function (d) {
+
+        //先收回所有tooltip
+        blockDivOnClick();
+
+        $("#invisibleBlock").css("display", "block");
+        isHashtagTooltipFixed = true;
+
+        //如果是点击hashtag出现tooltip，设置隐形div阻挡hashtag栏
+        $("#invisibleBlock")
+            .css("width", 1480 / 1728 * window.innerWidth)
+            .css("height", 850 / 886 * window.innerHeight)
+            .css("top", 20 / 886 * window.innerHeight)
+            .css("left", 110 / 1728 * window.innerWidth);
+
+
+
+        //点击hashtag图标，图标更改为选中状态
+
+        let hashtagGroupIndex;
+
+        if (d3.select(this).attr("id").indexOf("hashtagCir") > -1) // id是hashtagCir__
+        {
+            hashtagGroupIndex = parseInt(d3.select(this).attr("id").split("hashtagCir")[1]);
+
+        } else {
+            hashtagGroupIndex = parseInt(d3.select(this).attr("id").split("hashtag")[1]);
+        }
+
+        //高亮streamGraph
+        d3.selectAll(".myArea").style("opacity", .2) //其他变半透明
+        d3.select(`#streamGraph${hashtagGroupIndex}`)
+            //.style("stroke", "black")
+            .style("opacity", 1)
+
+        //标记当前选中的hashtagId
+        hashtagSelectedId = hashtagGroupIndex;
+
+        //背景变成填充色
+        d3.select(`#hashtagCir${hashtagGroupIndex}`)
+            .attr("fill", "#ffc000")
+            .attr("opacity", 1);
+
+        //图标变成前景色
+        d3.select(`#hashtag${hashtagGroupIndex}`)
+            .attr("fill", "#FFF9F0")
+            .attr("opacity", 1);
+
+    }
+
+    for (let i = 0; i <= 7; i++) {
+
+        //背景的圆形
+        gradRectSvg1.append("circle")
+            .attr("id", `hashtagCir${i}`)
+            .attr("cx", windPosX[i])
+            .attr("cy", windowWid * 0.015 + 28.5 / 2)  //井号svg高为28.5
+            .attr("r", windowWid * 0.012)
+            .attr("fill", "#ffc000")
+            .attr("opacity", 0)
+            .on("mouseover", hashtagTooltipMouseover)
+            .on("mouseleave", hashtagTooltipMouseleave)
+            .on("click", hashtagTooltipMouseClick);
+
+
+        gradRectSvg1.append("g")
+            .attr("transform", `translate(${windPosX[i] - 10}, ${windowWid * 0.015})`) // 井号svg的宽度为20， /2 =10
+            .append("path")
+            .attr("id", `hashtag${i}`)
+            .attr("d", "M3.32,20.09H0V16.43H3.74l.66-5.29H.89V7.44h4L5.82,0H9.1L8.21,7.44h4.86L14,0h3.31l-.89,7.44h3.48v3.7H16l-.65,5.29h3.7v3.66H14.92l-1,8.37H10.53l1-8.37H6.71l-1,8.37H2.31ZM12,16.43l.66-5.29H7.75l-.66,5.29Z")
+            .attr("fill", "#ffc000")
+            .on("mouseover", hashtagTooltipMouseover)
+            .on("mouseleave", hashtagTooltipMouseleave)
+            .on("click", hashtagTooltipMouseClick)
+    }
+
+
+    let keyEventYIndexScale = 1 / 886 * window.innerHeight;
+
+    //制作点击跳转到相关key event的链接
+    var keyEventYIndex = [0 * keyEventYIndexScale, 2150 * keyEventYIndexScale,
+        9050 * keyEventYIndexScale, 11460 * keyEventYIndexScale, 17100 * keyEventYIndexScale,
+        22200 * keyEventYIndexScale]; // 点击需要跳转到的页面高度
+
+    var hashtagSelectedId;
+    var jumpToKeyEvent = function (){
+
+        //如果是点击vane出现tooltip，设置隐形div阻挡vane栏
+        $("#invisibleBlock")
+            .css("height", 773.28 / 886 * window.innerHeight)
+            .css("top", 60 / 886 * window.innerHeight)
+            .css("width", 1550 / 1728 * window.innerWidth)
+            .css("left", 32 / 1728 * window.innerWidth);
+
+        //收回tooltip；相当于点击了一下隐形div
+        blockDivOnClick();
+
+        //展开新的tooltip
+        {
+            let maxLength = 100;
+
+            isVaneTooltipFixed = true;
+
+            d3.select("#vaneTooltip")
+                .style("opacity", 0)
+                .transition()
+                .duration(1000)
+                .style("opacity", 1); //制作渐入动画
+
+
+            d3.select("#vaneTooltip")
+                .style("display", "flex");
+
+            let vanetitleGroup = ["Investigation Report 1 · county level", "Investigation Report 2 · county level",
+            "Investigation Report 3 · city level", "Investigation Report 4 · city level",
+            "Investigation Report 5 · provincial level", "Investigation Report 6 · provincial level"]
+
+            d3.select("#vaneTitle")
+                .html(`${vanetitleGroup[hashtagSelectedId]}`);
+
+            d3.select("#vaneSubTitle")
+                .html(keyEvents[hashtagSelectedId].subtitle);
+
+            //关键事件内容填充
+            if (keyEvents[hashtagSelectedId].content.length > maxLength) {
+                d3.select("#showFullVane")
+                    .style("display", "inline-flex");
+
+                d3.select("#vaneContent")
+                    .attr("content", keyEvents[hashtagSelectedId].content);
+
+                d3.select("#vaneContent")
+                    .html(keyEvents[hashtagSelectedId].content.substring(0, maxLength + 1) + "...");
+            } else {
+                d3.select("#showFullVane")
+                    .style("display", "none");
+
+                d3.select("#vaneContent")
+                    .attr("content", keyEvents[hashtagSelectedId].content);
+
+                d3.select("#vaneContent")
+                    .html(keyEvents[hashtagSelectedId].content);
+            }
+
+            d3.select("#vaneFrom")
+                .html(keyEvents[hashtagSelectedId].from);
+
+            d3.select("#vaneDate")
+                .html(keyEvents[hashtagSelectedId].date);
+
+
+            $("#invisibleBlock").css("display", "block");
+
+            d3.select("#vaneTooltip")
+                .style("display", "flex");
+
+        }
+
+        //更改vane图标的颜色
+        d3.select(`#windVaneBg${hashtagSelectedId}`)
+            .attr("opacity", 1)
+
+        d3.select(`#windVaneBody${hashtagSelectedId}`)
+            .attr("fill", "#fff8ef")
+
+        d3.select(`#windVaneEye${hashtagSelectedId}`)
+            .attr("fill", "#ffc000")
+
+        d3.select(`#windVaneWing${hashtagSelectedId}`)
+            .attr("fill", "#ffc000")
+
+
+
+        //更新选中的key event id
+        keyEventSelectedId = hashtagSelectedId;
+
+        //窗口滚动
+        window.scrollTo({
+            top: keyEventYIndex[hashtagSelectedId],
+            // behavior: "smooth"
+        });
+
+        let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+        if(hashtagSelectedId == 0) //如果是第一个标签；顶部挡住了不能居中，所以tooltip显示在上端
+        {
+            d3.select("#vaneTooltip")
+                .style("top", `${ 100 }px`) // 选择悬停物体的父元素（g标签）
+        }else{
+            d3.select("#vaneTooltip")
+                .style("top", `${window.innerHeight / 2 - 150}px`) // 选择悬停物体的父元素（g标签）
+        }
+
+
+    }
+</script>
+
+<!--风向标绘制-->
+<script>
+    var vaneDis = [100, 2550, 9450, 11850, 17480, 22580]
+    var keyEvents;
+    var isVaneTooltipFixed = false; // 是否被隐形div阻挡
+
+    //读取key event 数据
+    d3.json("asset/json/key_event.json").then(function (data) {
+        keyEvents = d3.range(1, 6 + 1).map(function (d, i) {
+            return {
+                subtitle: data[d.toString()]["subtitle"],
+                content: data[d.toString()]["content"],
+                from: data[d.toString()]["from"],
+                date: data[d.toString()]["date"],
+            }
+        });
+    });
+
+    var vanemouseover = function (d) {
+
+        let maxLength = 100;
+
+        d3.select("#vaneTooltip")
+            .style("display", "flex");
+
+        let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+        d3.select("#vaneTooltip")
+            .style("top", `${vaneDis[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])] - scrollTop}px`) // 选择悬停物体的父元素（g标签）
+
+        let vanetitleGroup = ["Investigation Report 1 · county level", "Investigation Report 2 · county level",
+            "Investigation Report 3 · city level", "Investigation Report 4 · city level",
+            "Investigation Report 5 · provincial level", "Investigation Report 6 · provincial level"]
+
+        d3.select("#vaneTitle")
+            .html(`${vanetitleGroup[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])]}`);
+
+        d3.select("#vaneSubTitle")
+            .html(keyEvents[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])].subtitle);
+
+        //关键事件内容填充
+        if (keyEvents[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])].content.length > maxLength) {
+            d3.select("#showFullVane")
+                .style("display", "inline-flex");
+
+            d3.select("#vaneContent")
+                .attr("content", keyEvents[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])].content);
+
+            d3.select("#vaneContent")
+                .html(keyEvents[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])].content.substring(0, maxLength + 1) + "...");
+        } else {
+            //隐藏show more
+            d3.select("#showFullVane")
+                .style("display", "none");
+
+            d3.select("#vaneContent")
+                .attr("content", keyEvents[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])].content);
+
+            d3.select("#vaneContent")
+                .html(keyEvents[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])].content);
+        }
+
+        d3.select("#vaneFrom")
+            .html(keyEvents[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])].from);
+
+        d3.select("#vaneDate")
+            .html(keyEvents[parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])].date);
+
+
+    }
+
+    var vanemouseleave = function (d) {
+        if (!isVaneTooltipFixed) {
+            d3.select("#vaneTooltip")
+                .style("display", "none");
+        }
+
+    }
+
+    var vanmouseclick = function (d) {
+
+        //先收回所有tooltip
+        blockDivOnClick();
+
+        keyEventSelectedId = parseInt(d3.select(this.parentNode).attr("id").split("vane")[1])//设置当前选中的keyEvent
+
+        isVaneTooltipFixed = true;
+
+        $("#invisibleBlock").css("display", "block");
+
+        //如果是点击vane出现tooltip，设置隐形div阻挡vane栏
+        $("#invisibleBlock")
+            .css("height", 773.28 / 886 * window.innerHeight)
+            .css("top", 60 / 886 * window.innerHeight)
+            .css("width", 1550 / 1728 * window.innerWidth)
+            .css("left", 32 / 1728 * window.innerWidth);
+
+        //显示tooltip
+        d3.select("#vaneTooltip")
+            .style("display", "flex");
+
+        //图标背景出现
+        d3.select(`#windVaneBg${keyEventSelectedId}`)
+            .attr("opacity", 1);
+        //图标颜色更改
+        d3.select(`#windVaneBody${keyEventSelectedId}`)
+            .attr("fill", "#fff8ef")
+
+        d3.select(`#windVaneEye${keyEventSelectedId}`)
+            .attr("fill", "#ffc000")
+
+        d3.select(`#windVaneWing${keyEventSelectedId}`)
+            .attr("fill", "#ffc000")
+
+
+    }
+
+    for (let i = 0; i < vaneDis.length; i++) {
+
+
+        let windVaneGroup = d3.select("#timelineSvg")
+            .append("g")
+            .attr("transform", `translate(0, ${vaneDis[i]})`)
+            .attr("id", `vane${i}`)
+
+        //vane图标背景色块
+        windVaneGroup.append("path")
+            .attr("id", `windVaneBg${i}`)
+            .attr("d", "M0,0H60.79a29,29,0,0,1,29,29v0a29,29,0,0,1-29,29H0a0,0,0,0,1,0,0V0A0,0,0,0,1,0,0Z")
+            .attr("fill", "#ffc000")
+            .attr("opacity", 0)
+            .attr("transform", "translate(0, -2)")
+
+        windVaneGroup.append("path")
+            .attr("id", `windVaneBody${i}`)
+            .attr("d", "M80.8,37.28a1,1,0,0,1-1,1H76.72l2.15,2.16a1,1,0,0,1,0,1.41,1,1,0,0,1-1.41,0l-2.22-2.22a4.54,4.54,0,0,1-3.88,2.18h-.45v3.85a1.5,1.5,0,0,1-3,0V41.81H60a15.28,15.28,0,0,1-15.11-13H37V48.49l3.09-1.12A26.08,26.08,0,0,0,36,54.72a25.83,25.83,0,0,0-4.09-7.35L35,48.49V28.86H26.54a4.47,4.47,0,0,1-8.42,0H0v-3H18.12a4.47,4.47,0,0,1,8.42,0H35V6.5a7.48,7.48,0,0,0-1.55-1.31V0A8.86,8.86,0,0,1,36,2.45,9,9,0,0,1,38.57,0V5.19A6.7,6.7,0,0,0,37,6.5V25.86h7.66A15.28,15.28,0,0,1,60,11.22h1.49V32.71h9.92a4.54,4.54,0,0,1,3.89,2.21l2.21-2.21a1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42l-2.15,2.15H79.8A1,1,0,0,1,80.8,37.28Z")
+            .attr("fill", "#ffc000")
+            .on("mouseover", vanemouseover)
+            .on("mouseleave", vanemouseleave)
+            .on("click", vanmouseclick);
+
+        windVaneGroup.append("circle")
+            .attr("id", `windVaneEye${i}`)
+            .attr("cx", "69.96")
+            .attr("cy", "37.3")
+            .attr("r", "2")
+            .attr("fill", "#fff8ef")
+            .on("mouseover", vanemouseover)
+            .on("mouseleave", vanemouseleave)
+            .on("click", vanmouseclick);
+
+        windVaneGroup.append("path")
+            .attr("id", `windVaneWing${i}`)
+            .attr("d", "M54.88,30.74a5.29,5.29,0,1,1,0-10.58.75.75,0,0,1,0,1.5,3.79,3.79,0,1,0,0,7.58.75.75,0,0,1,0,1.5Z")
+            .attr("fill", "#fff8ef")
+            .on("mouseover", vanemouseover)
+            .on("mouseleave", vanemouseleave)
+            .on("click", vanmouseclick);
+
+    }
+
+    var jumpToHashtag = function (){
+
+        //图标背景出现
+        d3.select(`#windVaneBg${keyEventSelectedId}`)
+            .attr("opacity", 0);
+        //图标颜色更改
+        d3.select(`#windVaneBody${keyEventSelectedId}`)
+            .attr("fill", "#ffc000")
+
+        d3.select(`#windVaneEye${keyEventSelectedId}`)
+            .attr("fill", "#fff8ef")
+
+        d3.select(`#windVaneWing${keyEventSelectedId}`)
+            .attr("fill", "#fff8ef")
+
+        //如果是点击hashtag出现tooltip，设置隐形div阻挡hashtag栏
+        $("#invisibleBlock")
+            .css("width", 1480 / 1728 * window.innerWidth)
+            .css("height", 850 / 886 * window.innerHeight)
+            .css("top", 20 / 886 * window.innerHeight)
+            .css("left", 110 / 1728 * window.innerWidth);
+
+        //隐藏当前vane的tooltip
+        d3.select("#vaneTooltip")
+            .style("display", "none");
+
+        //显示hashtag，相当于hashtag图标的悬停事件
+        {
+            //如果是最后两个话题，不显示jump to key event
+            if(keyEventSelectedId == 6 || keyEventSelectedId == 7)
+            {
+                d3.select("#jumpToKeyEventSvg")
+                    .style("display", "none")
+            }
+            else{
+                d3.select("#jumpToKeyEventSvg")
+                    .style("display", "inline")
+            }
+
+            //显示tooltip，定位
+            hashtagTooltip
+                .style("left", `${windPosX[keyEventSelectedId] - 116}px`)
+                .style("top", `${windowWid * 0.04}px`)
+                .style("display", "block");
+
+            //更改名称：Hashtag Group · X
+            d3.select("#hashtagGroupNum")
+                .html(`Hashtag Group · ${keyEventSelectedId + 1}`);
+
+            //subtitle内容更新
+            d3.select("#hashtagGroupSubtitle")
+                .html(hashtagNodes[keyEventSelectedId]["event"]);
+
+            let fullHashtags;
+            let maxNumofHashtag = 4;
+
+            fullHashtags = "included hashtags:<br>"
+            for (let i = 0; i < hashtagNodes[keyEventSelectedId]["hashtags"].length; i++) {
+                fullHashtags += hashtagNodes[keyEventSelectedId]["hashtags"][i]
+                fullHashtags += "<br>"
+            }
+
+            if (hashtagNodes[keyEventSelectedId]["hashtags"].length <= maxNumofHashtag) { //内容最多显示4条
+                d3.select("#hashtagGroupInclude")
+                    .html(fullHashtags)
+                    .attr("content", fullHashtags);
+            } else {
+                d3.select("#hashtagGroupInclude")
+                    .attr("content", fullHashtags);
+
+                d3.select("#hashtagGroupInclude")
+                    .html(function () {
+                        let res;
+
+                        res = "included hashtags:<br>"
+                        for (let i = 0; i < 4; i++) {
+                            res += hashtagNodes[keyEventSelectedId]["hashtags"][i]
+                            if (i != 3) // 最后不加换行了
+                                res += "<br>"
+                        }
+                        return res;
+
+                    })
+            }
+
+
+        }
+
+        //固定hashtag，相当于hashtag图标的点击事件
+        {
+            $("#invisibleBlock").css("display", "block");
+            isHashtagTooltipFixed = true;
+
+            //点击hashtag图标，图标更改为选中状态
+
+            //背景变成填充色
+            d3.select(`#hashtagCir${keyEventSelectedId}`)
+                .attr("fill", "#ffc000")
+                .attr("opacity", 1);
+
+            //图标变成前景色
+            d3.select(`#hashtag${keyEventSelectedId}`)
+                .attr("fill", "#FFF9F0")
+                .attr("opacity", 1);
+        }
+
+        //更新选中的hashtag id
+        hashtagSelectedId = keyEventSelectedId;
+
+    }
+
+
+</script>
+
+<!--右侧滑块滚动; 判断是否滑动到圆形，是否高亮显示-->
+<script>
+    window.onscroll = function () {
+        //为了保证兼容性，这里取两个值，哪个有值取哪一个
+        //scrollTop就是触发滚轮事件时滚轮的高度
+        var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+        // console.log("滚动距离" + scrollTop);
+
+        //右侧滚动视口改变位置
+        if(!isDragViewBox)  // 如果没有在拖动viewbox
+            $("#scrollViewBox").css("top", scrollBoxScale(scrollTop));
+
+
+        //更新date显示的时间
+        let minTopDelta = ((0.94 * window.innerHeight - dragViewBox.offsetHeight) - 0.08 * window.innerHeight) / 32;
+        let dateLst = ["Jan 28", "Jan 29", "Jan 30", "Jan 31"]
+        for(let i=1; i<=28; i++)
+            dateLst.push(`Feb ${i}`)
+        dateLst.push("Feb 28")
+
+        d3.select("#dateDiv")
+            .html(dateLst[parseInt((scrollBoxScale(scrollTop) - 0.08 * window.innerHeight) / minTopDelta)] + " ,2022")
+
+
+
+
+        //滑条滑到keyevent的时候圆形高亮
+        let deltaRange = 300; //正副deltaRange的范围内认为是在这个circle内
+
+        for(let i = 0; i < 6 ; i++)
+        {
+            if( keyEventYIndex[i] - deltaRange < scrollTop && scrollTop < keyEventYIndex[i] + deltaRange )
+                d3.select(`#keyEventCir${i}`)
+                    .style("border-bottom-left-radius", "2px")
+                    .style("border-top-left-radius", "2px")
+                    .style("opacity", 1);
+            else
+                d3.select(`#keyEventCir${i}`)
+                    .style("border-bottom-left-radius", "6px")
+                    .style("border-top-left-radius", "6px")
+                    .style("opacity", 0.4);
+        }
+
+
+
+    }
+</script>
+
+<!--读取json数据，绘制可视化主体部分-->
+<script>
+    var lineGravity = 100; // 相对基准线的偏移：(0.5 - 消极概率) * 置信度 * lineGravity；MAX偏移值为 0.5 * 1 * lineGravity
+    var numNodes = 4725;
+    var nodes;
+    var deltaXOffset = 0.08;
+    var rightStrat = 0.84;
+
+    //生成[m, n]的随机数
+    function randomNum(minNum, maxNum) {
+        switch (arguments.length) {
+            case 1:
+                return parseInt(Math.random() * minNum + 1, 10);
+                break;
+            case 2:
+                return parseInt(Math.random() * (maxNum - minNum + 1) + minNum, 10);
+                break;
+            default:
+                return 0;
+                break;
+        }
+    }
+
+
+    //读取json数据，返回nodes，计算力引导布局
+    var samaraGroups; //存储生成samara seed的groups
+    var circleGroups; //存储交互圆形的groups
+    var seedPosition = [];
+
+    d3.json("asset/json/data_final.json").then(function (data) {
+        var xDimScalelow = d3.scaleLinear()
+            .domain([0, 11])
+            .range([windowHei * 0.98 * 0, windowHei * 0.98 * 0 + windowHei * 0.98 * 0.1]);
+
+        var xDimScalehigh = d3.scaleLinear()
+            .domain([11, 24])
+            .range([windowHei * 0.98 * 0 + windowHei * 0.98 * 0.1, windowHei * 0.98 * 1]);
+
+        var corDate = ["01月28", "01月29", "01月30", "01月31", "02月01", "02月02", "02月03", "02月04", "02月05",
+            "02月06", "02月07", "02月08", "02月09", "02月10", "02月11", "02月12", "02月13", "02月14", "02月15", "02月16",
+            "02月17", "02月18", "02月19", "02月20", "02月21", "02月22", "02月23", "02月24", "02月25", "02月26", "02月27", "02月28"];
+
+
+        nodes = d3.range(1, numNodes + 1).map(function (d, i) {
+
+            // 找到数组中对应日期的下标
+            var dateId = corDate.findIndex((element) => element == data[d.toString()]["time"].split("日")[0]);
+
+            //根据是第几天更改线性映射; 11点前发布占10%；后发布占90%
+            xDimScalelow.range([windowHei * 0.98 * dateId, windowHei * 0.98 * dateId + windowHei * 0.98 * 0.1]);
+            xDimScalehigh.range([windowHei * 0.98 * dateId + windowHei * 0.98 * 0.1, windowHei * 0.98 * (dateId + 1)]);
+
+            //消极情绪概率
+            let negaEmo = data[d.toString()]["negative_prob"];
+            let confidence = data[d.toString()]["senti_confidence"];
+            let gravity = 80;
+            let vlevel = data[d.toString()]["vlevel"];
+            let like = data[d.toString()]["like"];
+            let comment = data[d.toString()]["comment"];
+            let retweet = data[d.toString()]["retweet"];
+            let follower = data[d.toString()]["followers"];
+            let hashtagfirstcat = data[d.toString()]["hashtagfirstcat"];
+            let content = data[d.toString()]["content"];
+            let time = data[d.toString()]["time"];
+            let postname = data[d.toString()]["postname"];
+
+            //计算是几点发布的
+            var yIndex = parseFloat(data[d.toString()]["time"].split("日")[1].split(":")[0]) + parseFloat(data[d.toString()]["time"].split("日")[1].split(":")[1] / 60);
+            //计算点的y坐标
+            if (yIndex <= 11)  // 早于11点发布的
+            {
+                yIndex = xDimScalelow(yIndex);
+                if (yIndex < 100) //处理最上面无法交互的点
+                    yIndex = 150;
+            } else  // 晚于11点发布点
+            {
+                yIndex = xDimScalehigh(yIndex);
+            }
+
+            var xIndex;
+            if (negaEmo <= 0.5) {
+                xIndex = windPosX[(data[d.toString()]["hashtagfirstcat"] + 8) % 9] + (0.7 - negaEmo) * (gravity + randomNum(20, 30)); // firsttag = 0时，数组下标需要 = 8; 加入随机化因数
+            } else {
+                xIndex = windPosX[(data[d.toString()]["hashtagfirstcat"] + 8) % 9] + (0.5 - negaEmo) * (gravity + randomNum(10, 20)); // firsttag = 0时，数组下标需要 = 8; 加入随机化因数
+            }
+
+            var hashtagXIndex = windPosX[(data[d.toString()]["hashtagfirstcat"] + 8) % 9];
+
+            return {
+                xIndex: xIndex,
+                yIndex: yIndex,
+                negaEmo: negaEmo,
+                confidence: confidence,
+                vlevel: vlevel,
+                like: like,
+                comment: comment,
+                retweet: retweet,
+                follower: follower,
+                hashtagXIndex: hashtagXIndex,
+                hashtagfirstcat: hashtagfirstcat,
+                content: content,
+                time: time,
+                postname: postname,
+            }
+        });
+
+        var simulation = d3.forceSimulation(nodes)
+            .force('charge', d3.forceManyBody().strength(0))
+            .force('x', d3.forceX().x(function (d) {
+                return d.xIndex;
+            }))
+            .force('y', d3.forceY().y(function (d) {
+                return d.yIndex;
+            }))
+            .force('collision', d3.forceCollide().radius(function (d) {
+                return 8;
+                // let scaleLengthId;
+                // let retweetScale = d3.scaleLinear()
+                //     .domain([0, 3])
+                //     .range([1, 3]); //映射到的scaleLen范围
+                // if(d.retweet <= 500)
+                //     scaleLengthId = 1;
+                // else
+                //     scaleLengthId = retweetScale(Math.log(d.retweet / 500) / Math.log(10)) //取以10为底的对数
+                // return 16 * scaleLengthId;
+            }))
+            .on('tick', ticked)
+            .on('end', drawSeed); // 迭代结束后，绘制种子
+
+        //每次迭代刷新
+        function ticked() {
+            samaraGroups = d3.select('#seedGroup')
+                .selectAll('g.samaraSeed')
+                .data(nodes)
+                .join('g')
+                .attr("class", "samaraSeed")
+                .attr('cx', function (d) {
+                    return d.x;
+                })
+                .attr('cy', function (d) {
+                    return d.y;
+                })
+                .attr("id", function (d, i) {
+                    return `seed${i}`
+                })
+
+            circleGroups = d3.select('#interactCirGroup')
+                .selectAll('g.interactCircle')
+                .data(nodes)
+                .join('g')
+                .attr("class", "interactCircle")
+                .attr('cx', function (d) {
+                    return d.x;
+                })
+                .attr('cy', function (d) {
+                    return d.y;
+                })
+                .attr("id", function (d, i) {
+                    return `interactCircle${i}`
+                })
+
+
+            //不把静态量放在attr内，直接用nodes数组访问
+            // .attr("nega", function (d){
+            //     return d.negaEmo;
+            // })
+            // .attr("confidence", function (d){
+            //     return d.confidence;
+            // })
+            // .attr("vlevel", function (d){
+            //     return d.vlevel;
+            // })
+            // .attr("like", function (d){
+            //     return d.like;
+            // })
+            // .attr("retweet", function (d){
+            //     return d.retweet;
+            // })
+            // .attr("followerCat", function (d){
+            //     return d.followerCat;
+            // })
+            // .attr("hashtagXIndex", function (d){
+            //     return d.hashtagXIndex;
+            // });
+        }
+
+        function drawSeed() {
+            console.log("end!")
+            for (let i = 0; i < 4725; i++) {
+                // console.log($(`#seedHead3.svg${i}`).attr("vlevel"))
+                geneSeed(i, $(`#seed${i}`).attr("cx"), $(`#seed${i}`).attr("cy"), nodes[i].negaEmo, nodes[i].confidence, nodes[i].vlevel, nodes[i].like, nodes[i].comment, nodes[i].retweet,
+                    nodes[i].follower, nodes[i].hashtagXIndex, nodes[i].hashtagfirstcat);
+
+                geneCir(i, $(`#seed${i}`).attr("cx"), $(`#seed${i}`).attr("cy"), nodes[i].negaEmo, nodes[i].confidence, nodes[i].follower, nodes[i].hashtagfirstcat, nodes[i].hashtagXIndex);
+                console.log("finish")
+
+                seedPosition.push([$(`#seed${i}`).attr("cx"), $(`#seed${i}`).attr("cy")]);
+            }
+            updateSvgOnMouseMove();
+        }
+
+    })
+
+    //制作鱼眼效果
+    var fisheye = d3.fisheye.circular().radius(100);
+
+    function updateSvgOnMouseMove() {
+        //界面生成完之后再进行移动事件的绑定
+        timelineSvg.on("mousemove", function () {
+            fisheye.focus(d3.pointer(event, this));
+
+            // 位置一起变化
+            // groups.each(function(d) { d.fisheye = fisheye(d); })
+            //         .attr("transform", function (d){ return `translate(${d.fisheye.x}, ${d.fisheye.y}),scale(${d.fisheye.z})`; })
+
+            samaraGroups.each(function (d) {
+                d.fisheye = fisheye(d);
+            })
+                //.attr("transform", `translate(${cx}, ${cy}),rotate(${negascale(negaEmo * confidence)}),scale(-0.1, 0.1)`) //rotate(-20,300,400)
+                .attr("transform", function (d) {
+                    if (d3.select(this).attr("transform").split("scale")[1].indexOf(",") != -1) // 存在scale(-0.1, 0.1)的情况
+                    {
+                        let rotStr = d3.select(this).attr("transform").split("rotate")[1].split(",")[0]
+                        return `translate(${d.fisheye.x}, ${d.fisheye.y}),` + `rotate${rotStr},` + `scale(${-0.12 * d.fisheye.z}, ${0.12 * d.fisheye.z})`
+                    } else {
+                        let rotStr = d3.select(this).attr("transform").split("rotate")[1].split(",")[0]
+                        return `translate(${d.fisheye.x}, ${d.fisheye.y}),` + `rotate${rotStr},` + `scale(${0.12 * d.fisheye.z})`
+                    }
+
+                });
+
+            circleGroups.each(function (d) {
+                d.fisheye = fisheye(d);
+            })
+                .attr("transform", function (d) {
+                    if (d3.select(this).attr("transform").split("scale")[1].indexOf(",") != -1) // 存在scale(-0.1, 0.1)的情况
+                    {
+                        return d3.select(this).attr("transform").split("scale")[0] + `scale(${-0.12 * d.fisheye.z}, ${0.12 * d.fisheye.z})`
+                    } else {
+                        return d3.select(this).attr("transform").split("scale")[0] + `scale(${0.12 * d.fisheye.z})`
+                    }
+
+                });
+
+
+        });
+
+        //在上方过渡矩形内移动，取消鱼眼效果
+        gradRectSvg1.on("mousemove", function () {
+            fisheye.focus(d3.pointer(event, this));
+
+            // 位置一起变化
+            // groups.each(function(d) { d.fisheye = fisheye(d); })
+            //         .attr("transform", function (d){ return `translate(${d.fisheye.x}, ${d.fisheye.y}),scale(${d.fisheye.z})`; })
+
+            samaraGroups.each(function (d) {
+                d.fisheye = fisheye(d);
+            })
+                //.attr("transform", `translate(${cx}, ${cy}),rotate(${negascale(negaEmo * confidence)}),scale(-0.1, 0.1)`) //rotate(-20,300,400)
+                .attr("transform", function (d) {
+                    if (d3.select(this).attr("transform").split("scale")[1].indexOf(",") != -1) // 存在scale(-0.1, 0.1)的情况
+                    {
+                        let rotStr = d3.select(this).attr("transform").split("rotate")[1].split(",")[0]
+                        return `translate(${d.fisheye.x}, ${d.fisheye.y}),` + `rotate${rotStr},` + `scale(${-0.12 * d.fisheye.z}, ${0.12 * d.fisheye.z})`
+                    } else {
+                        let rotStr = d3.select(this).attr("transform").split("rotate")[1].split(",")[0]
+                        return `translate(${d.fisheye.x}, ${d.fisheye.y}),` + `rotate${rotStr},` + `scale(${0.12 * d.fisheye.z})`
+                    }
+
+                });
+
+            circleGroups.each(function (d) {
+                d.fisheye = fisheye(d);
+            })
+                .attr("transform", function (d) {
+                    if (d3.select(this).attr("transform").split("scale")[1].indexOf(",") != -1) // 存在scale(-0.1, 0.1)的情况
+                    {
+                        return d3.select(this).attr("transform").split("scale")[0] + `scale(${-0.12 * d.fisheye.z}, ${0.12 * d.fisheye.z})`
+                    } else {
+                        return d3.select(this).attr("transform").split("scale")[0] + `scale(${0.12 * d.fisheye.z})`
+                    }
+
+                });
+
+        });
+
+    }
+
+
+</script>
+
+<!--绘制种子函数-->
+<script>
+    //定义tooltip
+    // var Tooltip = d3.select("#samaraTimeline")
+    //     .append("div")
+    //     .style("opacity", 0)
+    //     .attr("class", "tooltip")
+    //     // .style("border", "solid")
+    //     // .style("border-width", "2px")
+    //     .style("width", `${window.innerWidth * 0.1}px`)
+    //     .style("height", `${window.innerWidth * 0.1}px`)
+
+    var Tooltip = d3.select("#seedTooltip")
+
+    var TooltipLine = d3.select("#timelineSvg")
+        .append("line")
+        .attr("stroke", "#ffc000")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "5,5")
+        .style("opacity", 0);
+
+    //定义moveToFront 置于顶层
+    d3.selection.prototype.moveToFront = function () {
+        return this.each(function () {
+            this.parentNode.appendChild(this);
+        });
+    };
+
+    function transNum(x) //转化数字格式
+    {
+        if (x < 1000)
+            return x.toString();
+        else if (x < 10000)
+            return x.toString()[0] + ',' + x.toString().substring(1); //补上千位的逗号
+        else if (x < 1000000)
+            if ((x / 1000).toFixed(1)[(x / 1000).toFixed(1).length - 1] == "0") //如果末尾为0，舍去最后两位
+                return (x / 1000).toFixed(1).substring(0, (x / 1000).toFixed(1).length - 2) + "K"
+            else
+                return (x / 1000).toFixed(1) + "K"
+        else if (x < 1000000000)
+            if ((x / 1000000).toFixed(1)[(x / 1000000).toFixed(1).length - 1] == "0") //如果末尾为0，舍去最后两位
+                return (x / 1000000).toFixed(1).substring(0, (x / 1000000).toFixed(1).length - 2) + "M"
+            else
+                return (x / 1000000).toFixed(1) + "M"
+        else if ((x / 1000000000).toFixed(1)[(x / 1000000000).toFixed(1).length - 1] == "0") //如果末尾为0，舍去最后两位
+            return (x / 1000000000).toFixed(1).substring(0, (x / 1000000000).toFixed(1).length - 2) + "B"
+        else
+            return (x / 1000000000).toFixed(1) + "B"
+    }
+
+    function transDate(x) //转化日期格式
+    {
+        //01月28日19:01
+        //&nbsp 7:23 PM · Apr 14, 2022
+
+        //取月份缩写值：Jan Feb
+        let month;
+        if (x.split("月")[0] == "01")
+            month = "Jan"
+        else
+            month = "Feb"
+        let date = x.split("月")[1].split("日")[0]
+        let time = x.split("日")[1]
+
+        return ` ${time} · ${month} ${date}, 2022`
+    }
+
+    function transContent(x) //内容缩略
+    {
+        let maxPostLen = 100; //定义帖子显示的最长长度
+
+        if (x.length <= maxPostLen)
+            return x
+        else
+            return x.substring(0, maxPostLen) + "..."
+    }
+
+    function geneSeed(index, cx, cy, negaEmo, confidence, vlevel, like, comment, retweet, follower, hashtagXIndex, hashtagfirstcat) {
+        //帖子可视化的关键参数
+        var scaleLengthId;
+        var scaleWidthId;
+        // var vlevel = "blue"
+
+        //like的映射计算; like的max值为2457804; 计算scaleWidthId
+        let likeScale = d3.scaleLinear()
+            .domain([0, 2.7])
+            .range([1, 3]); //映射到的scaleWid范围
+        if (like <= 5000) {
+            scaleWidthId = 1;
+        } else {
+            scaleWidthId = likeScale(Math.log(like / 5000) / Math.log(10)) //取以10为底的对数
+        }
+
+        //comment分类
+        let commentCat; //评论数量分在第几类
+        //comment的分组
+        if (comment <= 10)
+            commentCat = 1
+        else if (comment <= 100)
+            commentCat = 2
+        else
+            commentCat = 3
+
+        //粉丝数分类
+        let followerCat;
+        //粉丝数的分组
+        if (follower <= 10000)
+            followerCat = 1
+        else if (follower <= 1000000)
+            followerCat = 2
+        else
+            followerCat = 3
+
+
+        //retweet的映射计算；retweet的max值为418438；计算scaleLengthId
+        let retweetScale = d3.scaleLinear()
+            .domain([0, 3])
+            .range([1, 3]); //映射到的scaleLen范围
+        if (retweet <= 500) {
+            scaleLengthId = 1;
+        } else {
+            scaleLengthId = retweetScale(Math.log(retweet / 500) / Math.log(10)) //取以10为底的对数
+        }
+
+
+        var group1;
+
+        //消极在负半轴，积极在正半轴，确定g的位置以及旋转参数
+        if (negaEmo <= 0.5) {
+            let negascale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([-30, -10]); //积极：30度，消极：10度
+
+            group1 = d3.select(`#seed${index}`)
+                .attr("transform", `translate(${cx}, ${cy}),rotate(${negascale(negaEmo * confidence)}),scale(0.12)`) //rotate(-20,300,400)
+        } else {
+            let negascale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([30, 10]); //积极：30度，消极：10度
+
+            group1 = d3.select(`#seed${index}`)
+                .attr("transform", `translate(${cx}, ${cy}),rotate(${negascale(negaEmo * confidence)}),scale(-0.12, 0.12)`) //rotate(-20,300,400)
+        }
+
+        //叶面绘制；叶子宽度参数调整
+        group1.append("path")
+            .attr("d", `M ${185.11 * scaleLengthId} 23 ` +
+                `C ${192.21 * scaleLengthId} 34.23 ${156.54 * 1.2 * scaleLengthId} ${57.89 * scaleWidthId} ${132.11 * scaleLengthId} ${57.89 * scaleWidthId} ` +
+                `C ${100.6 * scaleLengthId} ${57.89 * scaleWidthId} ${75.04 * 0.8 * scaleLengthId} 30.79 38.58 30.79 ` +
+                "C 50.93 16.55 69 8.67 69 8.67 " +
+                `S ${162.94 * scaleLengthId} -12.13 ${185.11 * scaleLengthId} 23 ` +
+                "Z")
+            .attr("id", `seedWid${index}`)
+            .style("fill", "#ffe7a1")
+            .style("opacity", "0.2")
+            .style("stroke", "none");
+
+
+        //评论数量调整纹理
+        if (commentCat == 1) {
+
+            group1.append("path")
+                .attr("d", `M ${92.56 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${4.3} C ${109.32 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${4.3} ${119.8 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${18.52 * scaleWidthId} ${121.61 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${32.74 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M${125.75 * scaleLengthId},2.55 C ${142.51 * scaleLengthId},2.55,${153 * scaleLengthId},${16.77 * scaleWidthId},${154.8 * scaleLengthId},${31 * scaleWidthId}`)
+                // .attr("stroke", "#FFCA36")
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+        } else if (commentCat == 2) {
+
+            group1.append("path")
+                .attr("d", `M ${83.27 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${5.93 - Math.min(2, 2 * (scaleLengthId - 1))} C ${100.04 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${5.93 - Math.min(2, 2 * (scaleLengthId - 1))} ${110.52 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${20.15 * 0.8 * scaleWidthId} ${112.33 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${34.37 * 0.8 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${107.93 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} 2.55 C ${124.7 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} 2.55 ${138.45 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} ${16.77 * scaleWidthId} ${140.99 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} ${39.41 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${134 * scaleLengthId} 2.55 C ${150.76 * scaleLengthId} 2.55 ${159.2 * scaleLengthId} ${16.77 * scaleWidthId} ${161 * scaleLengthId} ${30.99 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+
+        } else {
+
+            group1.append("path")
+                .attr("d", `M ${71.86 * scaleLengthId} ${7.82 - Math.min(4, 4 * (scaleLengthId - 1))} C ${88.62 * scaleLengthId} 7.82 ${97.72 * scaleLengthId} ${24 * scaleWidthId} ${99.53 * scaleLengthId} ${38.19 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${97.8 * scaleLengthId} ${4.3 - Math.min(1.2, 1.2 * (scaleLengthId - 1))} C ${114.57 * scaleLengthId} 4.3 ${122.31 * scaleLengthId} ${29.05 * scaleWidthId} ${124.12 * scaleLengthId} ${43.3 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${119.78 * scaleLengthId} 2.55 C ${136.55 * scaleLengthId} 2.55 ${144.29 * scaleLengthId} ${27.3 * scaleWidthId} ${146.09 * scaleLengthId} ${41.55 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${140.49 * scaleLengthId} ${2.55 + Math.min(2.5, 2.5 * (scaleLengthId - 1))} C ${157.26 * scaleLengthId} 2.55 ${163.49 * scaleLengthId} ${22.83 * scaleWidthId} ${164.84 * scaleLengthId} ${33.67 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+        }
+        ;
+
+
+        //叶子长度参数调整; 粉丝数影响头部大小
+        if (followerCat == 1) {
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 " +
+                    "C 46 7.89 29.85 6.42 20.6 6.77 " +
+                    `C 9.22 7.2 ${-1.68} 9.24 ${0.22} 18.61` +
+                    `C 2.28 28.77 8.25 ${37} 21.44 ${37} ` +
+                    "C 44 37 57.07 12.5 75 8.92 " +
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `seedStem${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+        } else if (followerCat == 2) {
+
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 " +
+                    "C 46 7.89 29.85 6.42 20.6 6.77 " +
+                    "C 9.22 7.2 -16.088 6.503 -14.043 25.517 " +
+                    "C -12.048 39.53 -3.46 53.836 19.941 52.99 " +
+                    "C 48.698 50.735 57.07 12.5 75 8.92 " +
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `seedStem${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+
+        } else {
+
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 C 46 7.89 29.85 6.42 20.6 6.77 C 9.22 7.2 -41.314 7.718 -40.555 33.026 C -39.289 56.31 -25.731 82.914 10.897 81.111 C 57.311 75.993 52.579 16.323 75 8.92 "+
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `seedStem${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+        }
+
+        //定义情感的线性渐变
+        {
+            //目前：为每一个帖子定制一个defs：长度不同（x2不同）；末端颜色不同
+            let emo_grad = defs.append("linearGradient")
+                .attr("id", `emo_grad${index}`)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", "57.6")
+                .attr("y1", "6.89")
+                .attr("x2", `${185.11 * scaleLengthId}`)
+                .attr("y2", "23");
+
+
+            // let stop1 = emo_grad.append("stop")
+            //     .attr("offset", "0")
+            //     .attr("")
+            //     .style("stop-color", "#ffca36");
+
+
+            //内容情感
+            if (negaEmo <= 0.5) {
+                // console.log("a")
+                let a = d3.rgb(129, 233, 59);	//积极一端的颜色
+                let b = d3.rgb(255, 202, 54);	//橙色
+                let linear = d3.scaleLinear()
+                    .domain([0, 0.5])
+                    .range([0, 1])
+                let compute = d3.interpolate(a, b);
+                let endColor = compute(linear(negaEmo))
+
+                let stop1 = emo_grad.append("stop")
+                    .attr("id", `emo_grad_start${index}`)
+                    .attr("offset", "0")
+                    .style("stop-color", endColor);
+
+                let stop2 = emo_grad.append("stop")
+                    .attr("id", `emo_grad_end${index}`)
+                    .attr("offset", "0.1")
+                    .style("stop-opacity", "0")
+                    .style("stop-color", endColor);
+
+                d3.select(`#seedStem${index}`)
+                    .style("fill", "url(#" + emo_grad.attr("id") + ")");
+
+            } else {
+                let a = d3.rgb(237, 28, 36);	//消极一端的颜色
+                let b = d3.rgb(255, 202, 54);	//橙色
+                let linear = d3.scaleLinear()
+                    .domain([0.5, 1])
+                    .range([0, 1])
+                let compute = d3.interpolate(b, a);
+                let endColor = compute(linear(negaEmo))
+
+                let stop1 = emo_grad.append("stop")
+                    .attr("id", `emo_grad_start${index}`)
+                    .attr("offset", "0")
+                    .style("stop-color", endColor);
+
+                let stop2 = emo_grad.append("stop")
+                    .attr("id", `emo_grad_end${index}`)
+                    .attr("offset", "0.1")
+                    .style("stop-opacity", "0")
+                    .style("stop-color", endColor);
+
+                d3.select(`#seedStem${index}`)
+                    .style("fill", "url(#" + emo_grad.attr("id") + ")");
+
+            }
+        }
+
+
+        //微博等级
+        if (vlevel == "normal") {
+            group1.append("circle")
+                .attr("cx", "8")
+                .attr("cy", "-5")
+                .attr("r", "10")
+                .attr("stroke", "none")
+                .attr("fill", "#FFCA36")
+                .attr("opacity", "0.3")
+        } else if (vlevel == "yellow") {
+            group1.append("circle")
+                .attr("cx", "8")
+                .attr("cy", "-5")
+                .attr("r", "10")
+                .attr("stroke", "none")
+                .attr("fill", "#FFCA36")
+                .attr("opacity", "0.5")
+            group1.append("circle")
+                .attr("cx", "32")
+                .attr("cy", "-8")
+                .attr("r", "10")
+                .attr("stroke", "none")
+                .attr("fill", "#FFCA36")
+                .attr("opacity", "0.3")
+        } else if (vlevel == "gold") {
+            group1.append("circle")
+                .attr("cx", "8")
+                .attr("cy", "-5")
+                .attr("r", "10")
+                .attr("stroke", "none")
+                .attr("fill", "#FFCA36")
+                .attr("opacity", "0.8")
+            group1.append("circle")
+                .attr("cx", "32")
+                .attr("cy", "-8")
+                .attr("r", "10")
+                .attr("stroke", "none")
+                .attr("fill", "#FFCA36")
+                .attr("opacity", "0.5")
+            group1.append("circle")
+                .attr("cx", "56")
+                .attr("cy", "-8")
+                .attr("r", "10")
+                .attr("stroke", "none")
+                .attr("fill", "#FFCA36")
+                .attr("opacity", "0.3")
+        } else {
+            group1.append("circle")
+                .attr("cx", "8")
+                .attr("cy", "-5")
+                .attr("r", "10")
+                .attr("stroke", "none")
+                .attr("fill", "#3694ff")
+                .attr("opacity", "0.8")
+        }
+
+
+    }
+
+    var showFixedTooltip = false
+    var selectedSeed;
+
+    function geneCir(index, cx, cy, negaEmo, confidence, follower, hashtagfirstcat, hashtagXIndex) {
+        //粉丝数分类
+        let followerCat;
+        //粉丝数的分组
+        if (follower <= 10000)
+            followerCat = 1
+        else if (follower <= 1000000)
+            followerCat = 2
+        else
+            followerCat = 3
+
+        //悬停交互
+        var mouseover = function (d) {
+            console.log(d3.select(this)
+                    .attr("id")
+                // .split("interactCircle")[1]
+            )
+
+            d3.select(`#seed${d3.select(this)
+                .attr("id")
+                .split("interactCircle")[1]
+            }`).moveToFront();
+
+            var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+            //获取话题类别以及消极情绪概率
+            let hashtagfirstcat = nodes[d3.select(this)
+                .attr("id")
+                .split("interactCircle")[1]].hashtagfirstcat
+            let negaEmo = nodes[d3.select(this)
+                .attr("id")
+                .split("interactCircle")[1]].negaEmo
+
+            //显示retweet数量
+            d3.select("#postRetweet")
+                .html(transNum(nodes[d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]].retweet))
+
+            //显示like数量
+            d3.select("#postLike")
+                .html(transNum(nodes[d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]].like))
+
+            //显示comment数量
+            d3.select("#postComment")
+                .html(transNum(nodes[d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]].comment))
+
+            //显示帖子内容
+            d3.select("#postContent")
+                .html(transContent(nodes[d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]].content));
+
+            //帖子全部内容展示
+            d3.select("#postContent")
+                .attr("content", nodes[d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]].content);
+
+            //显示时间
+            d3.select("#postTime")
+                .html(transDate(nodes[d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]].time))
+
+            //情感映射
+            let emotionScale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([154, 0]); //最左位置：4px；最右位置：160px
+
+            //加载情感刻度条
+            d3.select("#emotionScaleBox")
+                .style("left", `${emotionScale(negaEmo)}px`)
+
+            //显示发帖人名字
+            d3.select("#posterName")
+                .html(`@${nodes[d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]].postname}`)
+            //显示粉丝数量
+            d3.select("#postFollower")
+                .html(`${transNum(nodes[d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]].follower)} followers`)
+
+            //显示tooltip框
+            Tooltip.style("display", "flex"); // 先设置为flex之后，才能获取offsetHeight属性
+
+            let divHeight = document.getElementById("seedTooltip").offsetHeight;
+            // console.log(`divHei:${divHeight}`);
+            // console.log(`divTopDis:${parseFloat(cy) - scrollTop - 50 + divHeight}`);
+
+            let divTopDistance = (parseFloat(cy) - scrollTop - 50 + divHeight > window.innerHeight) ? window.innerHeight - divHeight - 50 : parseFloat(cy) - scrollTop - 50;
+
+            if (hashtagfirstcat == 0 || (hashtagfirstcat == 8 && negaEmo < 0.5)) //最后两个话题类别
+                Tooltip
+                    .style("left", `${parseFloat(cx) - 350}px`)
+                    .style("top", `${divTopDistance}px`)
+                    .style("opacity", 1)
+                    .style("z-index", "1");
+            else
+                Tooltip
+                    .style("left", `${parseFloat(cx) + 90}px`)
+                    .style("top", `${divTopDistance}px`)
+                    .style("opacity", 1)
+                    .style("z-index", "1");
+
+
+            //显示对应线条
+            TooltipLine
+                .attr("x1", cx)
+                .attr("y1", (cy))
+                .attr("x2", hashtagXIndex)
+                .attr("y2", (cy))
+                .style("opacity", 1);
+
+            //seed主干渐变动画
+            d3.select(`#emo_grad_end${d3.select(this)
+                .attr("id")
+                .split("interactCircle")[1]}`)
+                .transition()
+                .duration(500)
+                .attr("offset", "1")
+                .style("stop-opacity", "100%")
+
+            d3.select(`#emo_grad_start${d3.select(this)
+                .attr("id")
+                .split("interactCircle")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .style("stop-color", "#ffca36");
+
+            //seed纹理渐变动画
+            d3.selectAll(`.seedleaf${d3.select(this)
+                .attr("id")
+                .split("interactCircle")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .attr("opacity", "100%");
+
+            //seed叶面渐变动画
+            d3.select(`#seedWid${d3.select(this)
+                .attr("id")
+                .split("interactCircle")[1]}`)
+                .transition()
+                .duration(500)
+                .style("opacity", "1");
+
+        }
+
+        var mousemove = function (d) {
+            // console.log(d3.pointer(event, this))
+            // Tooltip
+            //     .style("opacity", 1)
+            //     .style("display", "block")
+            //     .style("left", `${cx + 200}px`)
+            //     .style("top", `${cy}px`);
+
+            // streamGraph高亮显示
+            d3.selectAll(".myArea").style("opacity", 0.2) //其他变半透明
+            d3.select(`#streamGraph${(hashtagfirstcat + 8) % 9}`)  // hashtagfirstcat=0时，id为streamGraph8（other是最后一类标签）
+                // .style("stroke", "black")
+                // .style("stroke-width", "2")
+                .style("opacity", 1)
+
+
+        }
+        var mouseleave = function (d) {
+            if (!showFixedTooltip) //如果鼠标离开，并且不是显示固定tooltip的时候
+            {
+                Tooltip
+                    .style("opacity", 0)
+                    .style("display", "none")
+                    .style("z-index", "-10")
+
+                TooltipLine
+                    .style("opacity", 0);
+
+                d3.select(`#emo_grad_end${d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]}`)
+                    .transition()
+                    .duration(500)
+                    .attr("offset", "0.1")
+                    .style("stop-opacity", "0")
+
+                d3.select(`#emo_grad_start${d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]}`)
+                    .transition()
+                    .duration(500)
+                    // .attr("offset", "1")
+                    .style("stop-color", d3.select(
+                        `#emo_grad_end${d3.select(this)
+                            .attr("id")
+                            .split("interactCircle")[1]}`)
+                        .style("stop-color"));
+
+                d3.selectAll(`.seedleaf${d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]}`)
+                    .transition()
+                    .duration(500)
+                    // .attr("offset", "1")
+                    .attr("opacity", "0.2");
+
+                //seed叶面渐变动画
+                d3.select(`#seedWid${d3.select(this)
+                    .attr("id")
+                    .split("interactCircle")[1]}`)
+                    .transition()
+                    .duration(500)
+                    .style("opacity", "0.2");
+
+                //streamGraph对应地方取消高亮
+                d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+            }
+
+        }
+        var mouseclick = function (d) {
+            selectedSeed = d3.select(this);
+            showFixedTooltip = true;
+            // mousemove(d);
+            $("#invisibleBlock").css("display", "block");
+        }
+
+
+        let group1;
+
+        if (negaEmo <= 0.5) {
+            let negascale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([-30, -10]); //积极：30度，消极：10度
+
+            group1 = d3.select(`#interactCircle${index}`)
+                .attr("transform", `translate(${cx}, ${cy}),rotate(${negascale(negaEmo * confidence)}),scale(0.12)`) //rotate(-20,300,400)
+        } else {
+            let negascale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([30, 10]); //积极：30度，消极：10度
+
+            group1 = d3.select(`#interactCircle${index}`)
+                .attr("transform", `translate(${cx}, ${cy}),rotate(${negascale(negaEmo * confidence)}),scale(-0.12, 0.12)`) //rotate(-20,300,400)
+        }
+
+        //叶子长度参数调整; 粉丝数影响头部大小
+        if (followerCat == 1) {
+            group1.append("circle")
+                .attr("cx", 24)
+                .attr("cy", 26)
+                .attr("r", 20)
+                .attr("id", `interactCircle${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
+                .on("click", mouseclick);
+
+        } else if (followerCat == 2) {
+
+            group1.append("circle")
+                .attr("cx", 18)
+                .attr("cy", 32)
+                .attr("r", 28)
+                .attr("id", `interactCircle${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
+                .on("click", mouseclick);
+
+
+        } else {
+
+            group1.append("circle")
+                .attr("cx", 15)
+                .attr("cy", 35)
+                .attr("r", 34)
+                .attr("id", `interactCircle${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
+                .on("click", mouseclick);
+
+        }
+    }
+</script>
+
+<!--滑动条部分圆形hint提示-->
+<script>
+
+    //滚动条总高度为0.96windowHei
+    // var vaneDis = [100, 2550, 9450, 11850, 17480, 22580]
+
+    // let keyEventCirScale = d3.scaleLinear()
+    //     .domain([0, 31 * 0.98 * window.innerHeight]) //一共31天，mainSvg的高度为0.98windowHei
+    //     .range([0.02 * window.innerHeight, 0.98 * window.innerHeight]);
+
+    let keyEventCirScaleId = 1 / 886 * windowHei; //缩放的比例系数
+
+    var keyEventCirDis = [78 * keyEventCirScaleId, 137 * keyEventCirScaleId, 325 * keyEventCirScaleId, 391 * keyEventCirScaleId, 545 * keyEventCirScaleId, 685 * keyEventCirScaleId];
+
+    $(".keyEventCir")
+        .css("right", 108 / 1728 * window.innerWidth) //距离右边界124px，根据窗口宽度自动调整
+
+    for(let i=0; i<6; i++)
+    {
+        $(`#keyEventCir${i}`).css("top", keyEventCirDis[i]);
+    }
+
+    var keyEventCirClick = function (CirNum){
+
+        //图标背景出现
+        d3.select(`#windVaneBg${CirNum}`)
+            .attr("opacity", 1);
+        //图标颜色更改
+        d3.select(`#windVaneBody${CirNum}`)
+            .attr("fill", "#fff8ef")
+
+        d3.select(`#windVaneEye${CirNum}`)
+            .attr("fill", "#ffc000")
+
+        d3.select(`#windVaneWing${CirNum}`)
+            .attr("fill", "#ffc000")
+
+        hashtagSelectedId = CirNum; //相当于选中这个对应的hashtag，并跳转到对应的KeyEvent
+        jumpToKeyEvent();
+
+    }
+
+</script>
+
+<!--绘制滑条-->
+<script>
+    let domain_max_scale = [40, 200000000, 150000, 3500] //切换stream graph的时候需要用到不同的比例尺
+    let trans_hori_ = [46, 46, 46, 46]
+    var streamGraphTitlesId = 0;
+
+    d3.select("#streamGraphScroll")
+        .style("top", `${0.08 * window.innerHeight}px`) //总高度0.9Hei, 上面距离0.08Hei, 下面距离0.02Hei
+
+    // set the dimensions and margins of the graph
+    const margin = {top: 20, right: 30, bottom: 0, left: 10},
+        width = 800 - margin.left - margin.right,
+        height = 100 - margin.top - margin.bottom;
+    var windowHei = window.innerHeight;
+    var windowWid = window.innerWidth;
+
+    const svgStreamScroll = d3.select("#streamGraphScroll")
+        .append("svg")
+        .attr("width", 100 / 1728 * windowWid)
+        .attr("height", 0.9 * windowHei)
+        .attr("id", "svgStreamScroll");
+
+    //绘制stream graph图例
+    const legendGroup = svgStreamScroll.append("g")
+        .attr("transform", `translate(0, ${0.87 * window.innerHeight})`)
+
+    //绘制对应图例线条
+    legendGroup
+        .append("line")
+        .attr("x1", 20)
+        .attr("x2", 80)
+        .attr("y1", 15)
+        .attr("y2", 15)
+        .attr("stroke-width", 2)
+        .attr("stroke", "#455A64")
+
+    legendGroup
+        .append("line")
+        .attr("x1", 20)
+        .attr("x2", 20)
+        .attr("y1", 10)
+        .attr("y2", 16)
+        .attr("stroke-width", 2)
+        .attr("stroke", "#455A64")
+
+    legendGroup
+        .append("line")
+        .attr("x1", 80)
+        .attr("x2", 80)
+        .attr("y1", 10)
+        .attr("y2", 16)
+        .attr("stroke-width", 2)
+        .attr("stroke", "#455A64")
+
+    //绘制数字
+    legendGroup
+        .append("text")
+        .attr("id", "streamGraphLegendTxt")
+        .attr("text-anchor", "middle")
+        .style("user-select", "none")
+        .attr("x", 50)
+        .attr("y", 8)
+        .attr("font-size", 10)
+        .text(transNum(domain_max_scale[streamGraphTitlesId] * 8))
+
+    var geneStreamGraph = function(path, domain_max, trans_hori){
+        // append the svg object to the body of the page
+        const svgStreamScrollGroup = svgStreamScroll
+            .append("g")
+            // .attr("opacity", "0")
+            .attr("id", "svgStreamScrollGroup")
+
+
+        scrollrect = svgStreamScrollGroup.append("rect")
+            .attr("x", "0")
+            .attr("y", "0")
+            .attr("width", 100 / 1728 * windowWid)
+            .attr("height", windowHei * 0.86)
+            .attr("rx", "10")
+            .attr("ry", "10")
+            .attr("fill", "#B0BEC5")
+            .attr("opacity", "0.1")
+            .attr("id", "scrollrectBackground");
+
+
+        // Parse the Data
+        d3.csv(`${path}.csv`).then(function (data) {
+            // console.log(data)
+            // List of groups = header of the csv files
+            const keys = data.columns.slice(1)//从第二个开始往后切片
+            // console.log(keys)
+
+            // Add X axis, 纵向
+            const x = d3.scaleLinear()
+                .domain(d3.extent(data, function (d) {
+                    return parseInt(d.time);
+                }))  // 返回data中的year属性，并求值域
+                .range([0, windowHei * 0.86]);
+
+
+            // Add Y axis， 横向宽度
+            const y = d3.scaleLinear()
+                .domain([0, domain_max])
+                .range([5, 0]); //映射范围
+
+            //阅读数：domain[0, 200000000]
+
+
+            var colorrange = ["#455A64",
+                "#455A64", //少区域
+                "#78909C",
+                "#B0BEC5",
+                "#455A64",
+                "#78909C",
+                "#B0BEC5",
+                "#455A64", //少区域
+            ];
+            // color palette
+            const color = d3.scaleOrdinal()
+                .domain(keys)
+                .range(colorrange); //d3.schemeDark2
+
+            //stack the data?
+            const stackedData = d3.stack()
+                .offset(d3.stackOffsetSilhouette)
+                .keys(keys) //这样用stack创造出的是函数！还要给他参数（data）
+                (data)
+
+            // create a tooltip
+            // const Tooltip = svgStreamScrollGroup
+            //     .append("text")
+            //     .attr("x", 0)
+            //     .attr("y", 0)
+            //     .style("opacity", 0)
+            //     .style("font-size", 17) //在0，0位置显示悬停的名称
+
+            // Three function that change the tooltip when user hover / move / leave a cell
+            const mouseover = function (event, d) {
+                // Tooltip.style("opacity", 1)
+                d3.selectAll(".myArea").style("opacity", .2) //其他变半透明
+                d3.select(this)
+                    //.style("stroke", "black")
+                    .style("opacity", 1)
+                // grp = d.key
+                // Tooltip.text(grp)
+            }
+            const mousemove = function (event, d, i) {
+
+            }
+            const mouseleave = function (event, d) {
+                // Tooltip.style("opacity", 0)
+                d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+            }
+
+            // Area generator
+            const area = d3.area()
+                .curve(d3.curveMonotoneY)  //.curve(d3.curveCatmullRom.alpha(0))
+                .y(function (d) {
+                    return x(d.data.time);
+                })
+                .x0(function (d) {
+                    return y(d[0]);
+                })
+                .x1(function (d) {
+                    return y(d[1]);
+                })
+
+            console.log(stackedData)
+
+            // Show the areas
+            svgStreamScrollGroup
+                .selectAll("mylayers")
+                .data(stackedData)
+                .join("path")
+                .attr("class", "myArea")
+                .attr("id", function (d, i) {
+                    return `streamGraph${i}`;
+                })
+                .attr("transform", `translate(${trans_hori / 1728 * windowWid}, ${0})`)
+                .style("fill", function (d) {
+                    return color(d.key);
+                })
+                .attr("d", area)
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
+
+        })
+    }
+
+    geneStreamGraph("asset/csv/postNum_StreamGraph", domain_max_scale[0], trans_hori_[0]); //一开始默认在postNum_StreamGraph栏目
+</script>
+
+<!--切换滑条-->
+<script>
+    let streamGraphTitles= ["number of hot posts", "number of view", "number of discussion", "number of originals"];
+    let streamGraphPath = ["asset/csv/postNum_StreamGraph", "asset/csv/阅读数", "asset/csv/讨论数", "asset/csv/原创数"]
+
+    var streamGraphTitlesLeftArr = function (){
+        //更新id值
+        if(streamGraphTitlesId == 0)
+            streamGraphTitlesId = 3;
+        else
+            streamGraphTitlesId -= 1;
+
+        d3.select("#streamGraphTitle")
+            .html(streamGraphTitles[streamGraphTitlesId])
+
+        //删除现有的图
+        d3.select("#svgStreamScrollGroup").remove();
+        //绘制更新的图
+        geneStreamGraph(streamGraphPath[streamGraphTitlesId], domain_max_scale[streamGraphTitlesId], trans_hori_[streamGraphTitlesId])
+
+        //更新图例
+        d3.select("#streamGraphLegendTxt")
+            .text(transNum(domain_max_scale[streamGraphTitlesId] * 8));
+
+    }
+
+    var streamGraphTitlesRightArr = function (){
+        //更新id值
+        if(streamGraphTitlesId == 3)
+            streamGraphTitlesId = 0;
+        else
+            streamGraphTitlesId += 1;
+
+        d3.select("#streamGraphTitle")
+            .html(streamGraphTitles[streamGraphTitlesId])
+
+        //删除现有的图
+        d3.select("#svgStreamScrollGroup").remove();
+        //绘制更新的图
+        geneStreamGraph(streamGraphPath[streamGraphTitlesId], domain_max_scale[streamGraphTitlesId], trans_hori_[streamGraphTitlesId])
+
+        //更新图例
+        d3.select("#streamGraphLegendTxt")
+            .text(transNum(domain_max_scale[streamGraphTitlesId] * 8));
+    }
+</script>
+
+<!--retweet dragbox 拖动-->
+<script>
+    var retweetDragBox = document.getElementById("retweetDragBox")
+    retweetDragBox.onmousedown = function (e){
+
+        //显示tooltip
+        d3.select("#retweetNum")
+            .style("display", "block")
+
+        var e = e || window.event // 兼容ie浏览器
+
+        console.log(retweetDragBox.offsetLeft)
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof retweetDragBox.setCapture !== 'undefined') {
+            retweetDragBox.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.document.getElementById("retweetDragBg").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if(left < 0)
+                left = 0;
+            if(left > 108)
+                left = 108;
+
+            let retweetNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([500, 5000])
+            let retweetYScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([32, 42])
+
+            //更改tooltip内容
+            d3.select("#retweetNum")
+                .html(parseInt(retweetNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed9")
+                .remove();
+            geneSeed_Tp(retweetSvg, retweetDefs, 9, 200, retweetYScale(left), 1, 0.5, 1, false, "yellow", 0.3, 1, 1, parseInt(retweetNumScale(left)));
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            retweetDragBox.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+            d3.select("#retweetNum")
+                .style("display", "none")
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof retweetDragBox.releaseCapture !== 'undefined') {
+                retweetDragBox.releaseCapture()
+            }
+        }
+
+    }
+</script>
+
+<!--like dragbox 拖动-->
+<script>
+    var likeDragBox = document.getElementById("likeDragBox")
+    likeDragBox.onmousedown = function (e){
+
+        //显示tooltip
+        d3.select("#likeNum")
+            .style("display", "block")
+
+        var e = e || window.event // 兼容ie浏览器
+
+        console.log(likeDragBox.offsetLeft)
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof likeDragBox.setCapture !== 'undefined') {
+            likeDragBox.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.getElementById("likeDragBg").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if(left < 0)
+                left = 0;
+            if(left > 108)
+                left = 108;
+
+            let likeNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([5000, 50000])
+            // let likeYScale = d3.scaleLinear()
+            //     .domain([0, 108])
+            //     .range([32, 42])
+
+            //更改tooltip内容
+            d3.select("#likeNum")
+                .html(parseInt(likeNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed11")
+                .remove();
+            geneSeed_Tp(likeSvg, likeDefs, 11, 200, 32, 1, 0.5, 1, false, "yellow", 0.3, parseInt(likeNumScale(left)), 1, 1);
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            likeDragBox.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+            d3.select("#likeNum")
+                .style("display", "none")
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof likeDragBox.releaseCapture !== 'undefined') {
+                likeDragBox.releaseCapture()
+            }
+        }
+
+    }
+</script>
+
+<!--emotion dragbox 拖动-->
+<script>
+    var emotionDragBox = document.getElementById("emotionDragBox")
+    emotionDragBox.onmousedown = function (e){
+
+        var e = e || window.event // 兼容ie浏览器
+
+        console.log(emotionDragBox.offsetLeft)
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof emotionDragBox.setCapture !== 'undefined') {
+            emotionDragBox.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.getElementById("emotionDragBg").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if(left < 0)
+                left = 0;
+            if(left > 108)
+                left = 108;
+
+            let emotionNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([1, 0])
+            // let likeYScale = d3.scaleLinear()
+            //     .domain([0, 108])
+            //     .range([32, 42])
+
+            // //更改tooltip内容
+            // d3.select("#likeNum")
+            //     .html(parseInt(likeNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed15")
+                .remove();
+            d3.select("#Tp_emo_grad15")
+                .remove(); //删除渐变
+            console.log(`emo${emotionNumScale(left)}`)
+            geneSeed_Tp(emotionSvg, emotionDefs, 15, 140, 30, 1, emotionNumScale(left), 1, false, "yellow", 0.3, 1,200, 1);
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            emotionDragBox.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof emotionDragBox.releaseCapture !== 'undefined') {
+                emotionDragBox.releaseCapture()
+            }
+        }
+
+    }
+</script>
+
+<!--tooltip面板绘制-->
+<script>
+    //info icon 绘制
+    d3.select("#showTooltipOverlayImg")
+        .style("right", `${160 / 1728 * window.innerWidth}px`)
+        .style("top", `${0.91 * window.innerHeight}px`)
+
+    //点击后tooltip显示
+    var showTooltipOverlay = function ()
+    {
+        isOverlayTooltipShow = true;
+
+        d3.select("#overlayTooltip")
+            .style("display", "block");
+
+        $("#invisibleBlock")
+            .css("width", window.innerWidth)
+            .css("height", window.innerHeight)
+            .css("top", 0)
+            .css("left", 0)
+            .css("display", "block")
+            .css("background-color", "#000")
+            .css("opacity", 0.3)
+            .css("z-index", 1)
+
+    }
+
+
+    //设置overlay tooltip大小
+    d3.select("#overlayTooltip")
+        .style("width", `${window.innerWidth - 0.2 * window.innerHeight}px`)
+        .style("height", `${0.8 * window.innerHeight}px`)
+        .style("top", `${0.1 * window.innerHeight}px`)
+        .style("left", `${0.1 * window.innerHeight}px`)
+
+    //follower部分tooltip
+    var followerSvg = d3.select("#followerTooltip")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var followerDefs = followerSvg.append("defs");
+
+    geneSeed_Tp(followerSvg, followerDefs, 1, 36, 30, 1, 0.5, 1, false, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp(followerSvg, followerDefs, 2, 165, 27.5, 2, 0.5, 1, false, "yellow", 0.3, 1, 1, 1);
+    geneSeed_Tp(followerSvg, followerDefs, 3, 280, 25, 3, 0.5, 1, false, "yellow", 0.3, 1, 1, 1);
+
+
+    //vlevel部分tooltip
+    var vlevelSvg = d3.select("#vlevelTooltip")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var vlevelDefs = vlevelSvg.append("defs");
+
+    geneSeed_Tp(vlevelSvg, vlevelDefs, 4, 42, 30, 1, 0.5, 1, true, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp(vlevelSvg, vlevelDefs, 5, 120, 30, 1, 0.5, 1, true, "yellow", 0.3, 1, 1, 1);
+    geneSeed_Tp(vlevelSvg, vlevelDefs, 6, 202, 30, 1, 0.5, 1, true, "gold", 0.3, 1, 1, 1);
+    geneSeed_Tp(vlevelSvg, vlevelDefs, 7, 280, 30, 1, 0.5, 1, true, "blue", 0.3, 1, 1, 1);
+
+    //retweet部分tooltip
+    var retweetSvg = d3.select("#retweetTooltip")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var retweetDefs = retweetSvg.append("defs");
+
+    geneSeed_Tp(retweetSvg, retweetDefs, 8, 42, 30, 1, 0.5, 1, false, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp(retweetSvg, retweetDefs, 9, 200, 32, 1, 0.5, 1, false, "yellow", 0.3, 1, 1, 500);
+    //滑条：cy从30到42；retweet从500到5k
+
+    //likes部分tooltip
+    var likeSvg = d3.select("#likeTooltip")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var likeDefs = likeSvg.append("defs");
+
+    geneSeed_Tp(likeSvg, likeDefs, 10, 42, 30, 1, 0.5, 1, false, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp(likeSvg, likeDefs, 11, 200, 32, 1, 0.5, 1, false, "yellow", 0.3, 1, 1, 500);
+
+    //comment部分tooltip
+    var commentSvg = d3.select("#commentTooltip")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var commentDefs = commentSvg.append("defs");
+
+    geneSeed_Tp(commentSvg, commentDefs, 12, 24, 30, 1, 0.5, 1, false, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp(commentSvg, commentDefs, 13, 155, 30, 1, 0.5, 2, false, "yellow", 0.3, 1, 100, 1);
+    geneSeed_Tp(commentSvg, commentDefs, 14, 274, 30, 1, 0.5, 3, false, "yellow", 0.3, 1, 200, 1);
+
+    //emotion部分tooltip
+    var emotionSvg = d3.select("#emotionTooltip")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var emotionDefs = emotionSvg.append("defs");
+
+    geneSeed_Tp(emotionSvg, emotionDefs, 15, 140, 30, 1, 0.5, 3, false, "yellow", 0.3, 1, 200, 1);
+
+
+
+
+    function geneSeed_Tp(tooltipSvg, tooltipDef, index, cx, cy, followercat, emo_neg_prob, commentCat, isVlevelOn, vlevel, gScale, like, comment, retweet,) {
+        var scaleLengthId;
+        var scaleWidthId;
+
+        //like的映射计算; like的max值为2457804; 计算scaleWidthId
+        let likeScale = d3.scaleLinear()
+            .domain([0, 2.7])
+            .range([1, 3]); //映射到的scaleWid范围
+        if (like <= 5000) {
+            scaleWidthId = 1;
+        } else {
+            scaleWidthId = likeScale(Math.log(like / 5000) / Math.log(10)) //取以10为底的对数
+        }
+
+        //retweet的映射计算；retweet的max值为418438；计算scaleLengthId
+        let retweetScale = d3.scaleLinear()
+            .domain([0, 3])
+            .range([1, 3]); //映射到的scaleLen范围
+        if (retweet <= 500) {
+            scaleLengthId = 1;
+        } else {
+            scaleLengthId = retweetScale(Math.log(retweet / 500) / Math.log(10)) //取以10为底的对数
+        }
+
+
+        var group1 = tooltipSvg
+            .append("g")
+            .attr("id", `Tp_seed${index}`)
+            .attr("transform", `translate(${cx}, ${cy}), rotate(-30) ,scale(${gScale})`) //rotate(-20,300,400)
+        //.attr("transform","rotate(30,600,400)");
+
+        //叶子宽度参数调整
+        group1.append("path")
+            .attr("d", `M ${185.11 * scaleLengthId} 23 ` +
+                `C ${192.21 * scaleLengthId} 34.23 ${156.54 * 1.2 * scaleLengthId} ${57.89 * scaleWidthId} ${132.11 * scaleLengthId} ${57.89 * scaleWidthId} ` +
+                `C ${100.6 * scaleLengthId} ${57.89 * scaleWidthId} ${75.04 * 0.8 * scaleLengthId} 30.79 38.58 30.79 ` +
+                "C 50.93 16.55 69 8.67 69 8.67 " +
+                `S ${162.94 * scaleLengthId} -12.13 ${185.11 * scaleLengthId} 23 ` +
+                "Z")
+            .style("fill", "#FFCA36")
+            .style("opacity", "0.2")
+            .style("stroke", "none");
+
+        //评论数量调整纹理
+        if (commentCat == 1) {
+
+            group1.append("path")
+                .attr("d", `M ${92.56 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${4.3} C ${109.32 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${4.3} ${119.8 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${18.52 * scaleWidthId} ${121.61 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${32.74 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M${125.75 * scaleLengthId},2.55 C ${142.51 * scaleLengthId},2.55,${153 * scaleLengthId},${16.77 * scaleWidthId},${154.8 * scaleLengthId},${31 * scaleWidthId}`)
+                // .attr("stroke", "#FFCA36")
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+        } else if (commentCat == 2) {
+
+            group1.append("path")
+                .attr("d", `M ${83.27 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${5.93 - Math.min(2, 2 * (scaleLengthId - 1))} C ${100.04 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${5.93 - Math.min(2, 2 * (scaleLengthId - 1))} ${110.52 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${20.15 * 0.8 * scaleWidthId} ${112.33 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${34.37 * 0.8 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${107.93 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} 2.55 C ${124.7 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} 2.55 ${138.45 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} ${16.77 * scaleWidthId} ${140.99 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} ${39.41 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${134 * scaleLengthId} 2.55 C ${150.76 * scaleLengthId} 2.55 ${159.2 * scaleLengthId} ${16.77 * scaleWidthId} ${161 * scaleLengthId} ${30.99 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+
+        } else {
+
+            group1.append("path")
+                .attr("d", `M ${71.86 * scaleLengthId} ${7.82 - Math.min(4, 4 * (scaleLengthId - 1))} C ${88.62 * scaleLengthId} 7.82 ${97.72 * scaleLengthId} ${24 * scaleWidthId} ${99.53 * scaleLengthId} ${38.19 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${97.8 * scaleLengthId} ${4.3 - Math.min(1.2, 1.2 * (scaleLengthId - 1))} C ${114.57 * scaleLengthId} 4.3 ${122.31 * scaleLengthId} ${29.05 * scaleWidthId} ${124.12 * scaleLengthId} ${43.3 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${119.78 * scaleLengthId} 2.55 C ${136.55 * scaleLengthId} 2.55 ${144.29 * scaleLengthId} ${27.3 * scaleWidthId} ${146.09 * scaleLengthId} ${41.55 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${140.49 * scaleLengthId} ${2.55 + Math.min(2.5, 2.5 * (scaleLengthId - 1))} C ${157.26 * scaleLengthId} 2.55 ${163.49 * scaleLengthId} ${22.83 * scaleWidthId} ${164.84 * scaleLengthId} ${33.67 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf${index}`)
+                .style("stroke", "#FFCA36");
+        }
+
+        //悬停交互
+        var mouseover = function (d) {
+            console.log(d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle")[1]
+            )
+
+            d3.select(`#Tp_emo_grad_end${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle")[1]}`)
+                .transition()
+                .duration(500)
+                .attr("offset", "1")
+                .style("stop-opacity", "100%")
+
+            d3.select(`#Tp_emo_grad_start${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .style("stop-color", "#ffca36");
+
+            d3.selectAll(`.Tp_seedleaf${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .attr("opacity", "100%");
+
+        }
+        var mousemove = function (d) {
+
+        }
+        var mouseleave = function (d) {
+
+            d3.select(`#Tp_emo_grad_end${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle")[1]}`)
+                .transition()
+                .duration(500)
+                .attr("offset", "0.1")
+                .style("stop-opacity", "0")
+
+            d3.select(`#Tp_emo_grad_start${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .style("stop-color", d3.select(
+                    `#Tp_emo_grad_end${d3.select(this)
+                        .attr("id")
+                        .split("Tp_tooltipCircle")[1]}`)
+                    .style("stop-color"));
+
+            d3.selectAll(`.Tp_seedleaf${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .attr("opacity", "0.2");
+        }
+
+
+        //叶子长度参数调整; 粉丝数影响头部大小
+        if (followercat == 1) {
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 " +
+                    "C 46 7.89 29.85 6.42 20.6 6.77 " +
+                    `C 9.22 7.2 ${-1.68} 9.24 ${0.22} 18.61` +
+                    `C 2.28 28.77 8.25 ${37} 21.44 ${37} ` +
+                    "C 44 37 57.07 12.5 75 8.92 " +
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `Tp_seedStem${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+            group1.append("circle")
+                .attr("cx", 24)
+                .attr("cy", 26)
+                .attr("r", 18)
+                .attr("id", `Tp_tooltipCircle${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+
+        } else if (followercat == 2) {
+
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 " +
+                    "C 46 7.89 29.85 6.42 20.6 6.77 " +
+                    "C 9.22 7.2 -16.088 6.503 -14.043 25.517 " +
+                    "C -12.048 39.53 -3.46 53.836 19.941 52.99 " +
+                    "C 48.698 50.735 57.07 12.5 75 8.92 " +
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `Tp_seedStem${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+            group1.append("circle")
+                .attr("cx", 18)
+                .attr("cy", 32)
+                .attr("r", 25)
+                .attr("id", `Tp_tooltipCircle${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+
+        } else {
+
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 C 46 7.89 29.85 6.42 20.6 6.77 C 9.22 7.2 -41.583 4.467 -40.905 37.759 C -39.289 56.31 -25.731 82.914 10.897 81.111 C 57.311 75.993 52.579 16.323 75 8.92"+
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `Tp_seedStem${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+            group1.append("circle")
+                .attr("cx", 15)
+                .attr("cy", 35)
+                .attr("r", 30)
+                .attr("id", `Tp_tooltipCircle${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+        }
+
+        //定义情感的线性渐变
+        {
+            //目前：为每一个帖子定制一个defs：长度不同（x2不同）；末端颜色不同
+            let emo_grad = tooltipDef.append("linearGradient")
+                .attr("id", `Tp_emo_grad${index}`)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", "57.6")
+                .attr("y1", "6.89")
+                .attr("x2", `${185.11 * scaleLengthId}`)
+                .attr("y2", "23");
+
+            //内容情感
+            if (emo_neg_prob <= 0.5) {
+                // console.log("a")
+                let a = d3.rgb(129, 233, 59);	//积极一端的颜色
+                let b = d3.rgb(255, 202, 54);	//橙色
+                let linear = d3.scaleLinear()
+                    .domain([0, 0.5])
+                    .range([0, 1])
+                let compute = d3.interpolate(a, b);
+                let endColor = compute(linear(emo_neg_prob))
+
+                let stop1 = emo_grad.append("stop")
+                    .attr("id", `Tp_emo_grad_start${index}`)
+                    .attr("offset", "0")
+                    .style("stop-color", endColor);
+
+                let stop2 = emo_grad.append("stop")
+                    .attr("id", `Tp_emo_grad_end${index}`)
+                    .attr("offset", "0.1")
+                    .style("stop-opacity", "0")
+                    .style("stop-color", endColor);
+
+                d3.select(`#Tp_seedStem${index}`)
+                    .style("fill", "url(#" + emo_grad.attr("id") + ")");
+
+            } else {
+                let a = d3.rgb(237, 28, 36);	//消极一端的颜色
+                let b = d3.rgb(255, 202, 54);	//橙色
+                let linear = d3.scaleLinear()
+                    .domain([0.5, 1])
+                    .range([0, 1])
+                let compute = d3.interpolate(b, a);
+                let endColor = compute(linear(emo_neg_prob))
+
+                let stop1 = emo_grad.append("stop")
+                    .attr("id", `Tp_emo_grad_start${index}`)
+                    .attr("offset", "0")
+                    .style("stop-color", endColor);
+
+                let stop2 = emo_grad.append("stop")
+                    .attr("id", `Tp_emo_grad_end${index}`)
+                    .attr("offset", "0.1")
+                    .style("stop-opacity", "0")
+                    .style("stop-color", endColor);
+
+                d3.select(`#Tp_seedStem${index}`)
+                    .style("fill", "url(#" + emo_grad.attr("id") + ")");
+
+            }
+        }
+
+
+        if (isVlevelOn)
+        {
+            // 微博等级
+            if (vlevel == "normal") {
+                group1.append("circle")
+                    .attr("cx", "8")
+                    .attr("cy", "-5")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.3")
+            } else if (vlevel == "yellow") {
+                group1.append("circle")
+                    .attr("cx", "8")
+                    .attr("cy", "-5")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.5")
+                group1.append("circle")
+                    .attr("cx", "32")
+                    .attr("cy", "-8")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.3")
+            } else if (vlevel == "gold") {
+                group1.append("circle")
+                    .attr("cx", "8")
+                    .attr("cy", "-5")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.8")
+                group1.append("circle")
+                    .attr("cx", "32")
+                    .attr("cy", "-8")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.5")
+                group1.append("circle")
+                    .attr("cx", "56")
+                    .attr("cy", "-8")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.3")
+            } else {
+                group1.append("circle")
+                    .attr("cx", "8")
+                    .attr("cy", "-5")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#3694ff")
+                    .attr("opacity", "0.8")
+            }
+        }
+
+    }
+
+
+
+</script>
+
+
+</body>
+</html>

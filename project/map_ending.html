@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <script type="text/javascript" src="js/lib/jquery.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/ScrollMagic.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/debug.addIndicators.js"></script>
+    <script type="text/javascript" src="js/lib/greensock/TweenMax.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/animation.gsap.js"></script>
+    <script src="https://use.typekit.net/nlq1kdt.js"></script>
+
+    <!--    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>-->
+    <!--    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>-->
+
+    <!--    <script src="https://unpkg.com/topojson@3"></script>-->
+
+
+    <!-- BOOTSTRAP5 最新编译并压缩的 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- 最新编译的 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+    <style>
+        path {
+            stroke: white;
+            stroke-width: 0.25px;
+            fill: grey;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Create an element where the map will take place -->
+<svg id="my_dataviz" width="630" height="350"></svg>
+<script>
+
+    d3.select("#my_dataviz")
+        .attr("height", window.innerHeight)
+        .attr("width", window.innerWidth);
+
+    // The svg
+    const svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+    // Map and projection
+    const projection = d3.geoMercator()
+        .center([2, 47])                // GPS of location to zoom on
+        .scale(200)                       // This is like the zoom
+        .translate([width / 2, height / 4])
+
+
+    // Create data for circles:
+    const markers = [
+        {long: 9.083, lat: 42.149, group: "A", size: 34}, // corsica
+        {long: 7.26, lat: 43.71, group: "A", size: 14}, // nice
+        {long: 2.349, lat: 48.864, group: "B", size: 87}, // Paris
+        {long: -1.397, lat: 43.664, group: "B", size: 41}, // Hossegor
+        {long: 3.075, lat: 50.640, group: "C", size: 78}, // Lille
+        {long: -3.83, lat: 58, group: "C", size: 12} // Morlaix
+    ];
+
+    // Load external data and boot
+    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function (data) {
+
+        // Filter data
+        // data.features = data.features.filter( d => d.properties.name=="France")
+
+        // Create a color scale
+        const color = d3.scaleOrdinal()
+            .domain(["A", "B", "C"])
+            .range(["#402D54", "#D18975", "#8FD175"])
+
+        // Add a scale for bubble size
+        const size = d3.scaleLinear()
+            .domain([1, 100])  // What's in the data
+            .range([4, 50])  // Size in pixel
+
+        // Draw the map
+        svg.append("g")
+            .selectAll("path")
+            .data(data.features)
+            .join("path")
+            .attr("fill", "#b8b8b8")
+            .attr("d", d3.geoPath()
+                .projection(projection)
+            )
+            .style("stroke", "black")
+            .style("opacity", .3)
+
+        // Add circles:
+        svg
+            .selectAll("myCircles")
+            .data(markers)
+            .join("circle")
+            .attr("cx", d => projection([d.long, d.lat])[0])
+            .attr("cy", d => projection([d.long, d.lat])[1])
+            .attr("r", d => size(d.size))
+            .style("fill", d => color(d.group))
+            .attr("stroke", d => color(d.group))
+            .attr("stroke-width", 3)
+            .attr("fill-opacity", .4)
+    })
+
+</script>
+</script>
+</body>
+</html>

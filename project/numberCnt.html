@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>js实现数字跳动到指定数字</title>
+
+    <style>
+
+        h1 {font-size: 150px;text-align:center;}
+
+        p {text-align:center;}
+
+        button {font-size:40px;}
+
+    </style>
+
+</head>
+
+<body>
+
+<h1 id="number">0</h1>
+
+<p>
+
+    <button onclick="start()">开始计数</button>
+
+</p>
+
+</body>
+
+<script>
+    var addSemi = function (num){
+        let numStr = num.toString();
+        let cnt = 0;
+        let resLst = [];
+
+        for(let i = numStr.length - 1; i >= 0 ; i--){
+
+            resLst.push(numStr[i]);
+            cnt += 1;
+            if (cnt % 3 == 0)
+            {
+                cnt = 0;
+                resLst.push(',');
+            }
+        }
+
+        let res = "";
+        for(let i = resLst.length - 1; i >= 0 ; i--){
+            res += resLst[i];
+        }
+        if(res[0] == ",")
+            res = res.substring(1,);
+        return res;
+    }
+
+    /*
+
+    * startNum 代表要跳动的初始数字
+
+    * targetNum 代表要跳动到的数字
+
+    * time  代表要跳动需要花费的时间
+
+    * selector 代表要跳动元素的选择器
+
+    */
+
+    const $setJumpNumber = (startNum, targetNum, time = 1, selector) => {
+
+        let dom = document.querySelector(selector);
+
+        let originNum = startNum;
+
+        let stepNum = 0;
+
+        let timeNum = time;
+
+        dom.innerHTML = startNum;
+
+        let timeId = setInterval(() => {
+
+            if (originNum < targetNum) {
+
+                timeNum -= 0.001;
+
+                let strNum = originNum.toString();
+
+                // 数字比较少的时候直接用 + 1; 数字很大直接 +1 要很久才能调到最对应的数字，所有后三位数随机跳动的方式进行模拟生成
+
+                if (targetNum.toString().length < 6) {
+
+                    stepNum += 1; // 这样才可以实现越跳越快的效果
+
+                    originNum = originNum + stepNum;
+
+                    dom.innerHTML = addSemi(originNum);
+
+                } else {
+
+                    stepNum += 500; // 这样才可以实现越跳越快的效果
+
+                    originNum = originNum + stepNum;
+
+                    dom.innerHTML = addSemi(strNum.substr(0, strNum.length - 3) + Math.floor(Math.random()*10) + Math.floor(Math.random()*10) + Math.floor(Math.random()*10));
+
+                }
+
+            } else {
+
+                dom.innerHTML = addSemi(targetNum);
+
+                clearInterval(timeId);
+
+            }
+
+        }, timeNum);
+
+    };
+
+    function start () {
+
+        $setJumpNumber(1, 2300, 20, '#number');
+
+    };
+
+</script>
+
+</html>

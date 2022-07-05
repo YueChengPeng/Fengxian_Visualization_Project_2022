@@ -1,0 +1,2912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <script type="text/javascript" src="js/lib/jquery.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/ScrollMagic.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/debug.addIndicators.js"></script>
+    <script type="text/javascript" src="js/lib/greensock/TweenMax.min.js"></script>
+    <script type="text/javascript" src="js/scrollmagic/uncompressed/plugins/animation.gsap.js"></script>
+    <script src="https://use.typekit.net/nlq1kdt.js"></script>
+
+    <!-- BOOTSTRAP5 最新编译并压缩的 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- 最新编译的 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+
+    <style>
+        html {
+            font-size: 22px; /*rem（font size of the root element）是指相对于根元素的字体大小的单位*/
+        }
+
+        body {
+            background: #FFF9F0;
+        }
+
+        .heading {
+            font-size: 8rem;
+            text-align: center;
+            margin-top: 18%;
+            margin-bottom: 18%;
+
+        }
+
+        .description {
+            font-size: 0.8rem;
+            text-align: left;
+            margin-left: 30%;
+            margin-right: 30%;
+            margin-bottom: 1.2rem;
+        }
+
+        .descriptionWithSvg { /*左边文字，右边svg类型*/
+            font-size: 0.8rem;
+            text-align: left;
+            margin-top: 0;
+            margin-left: 30%;
+            margin-right: 10%;
+            margin-bottom: 2rem;
+        }
+
+        video {
+            display: block;
+            min-height: 100%;
+            min-width: 100%;
+            position: absolute;
+            top: 50%; /*水平、竖直都居中？*/
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #scrollViewBox {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            height: 50px;
+            width: 100px;
+            box-sizing: border-box; /*改为内侧描边*/
+            background-color: rgba(255, 255, 255, 0.4);
+            border: 2px solid rgba(255, 202, 54, 0.4);
+            border-radius: 10px;
+
+            /*cursor: move;*/
+            /*-webkit-box-shadow: black;*/
+        }
+
+        .seedTooltip {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 5px;
+            width: 300px;
+            /*max-width: 500px;*/
+            /*height: 300px;*/
+
+            -webkit-box-shadow: #c0bbb4 0px 0px 10px;
+            -moz-box-shadow: #c0bbb4 0px 0px 10px;
+            box-shadow: #c0bbb4 0px 0px 10px;
+            border-radius: 8px;
+            background-color: #FFFCF7;
+        }
+
+        .svgDiv {
+            display: inline-flex;
+            line-height: 24px;
+            text-align: center;
+            height: 24px;
+            vertical-align: top
+        }
+
+        .divider-flex {
+            height: 1px;
+            border-top: 1px solid #e5e5e5;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            /*border-radius: 0.5px;*/
+            text-align: center;
+        }
+
+        .emotionScale {
+            height: 8px;
+            width: 4px;
+            background: none;
+            border: 1px solid #000;
+            position: relative;
+            top: 8px;
+            -webkit-box-shadow: #c0bbb4 0px 0px 6px;
+            -moz-box-shadow: #c0bbb4 0px 0px 6px;
+            box-shadow: #c0bbb4 0px 0px 6px;
+        }
+
+        .tooltip { /*bs5的tooltip样式*/
+            font-size: 0.4em;
+        }
+
+        .tooltip .tooltip-inner {
+            max-width: 152px;
+        }
+
+        .keyEventCir {
+            position: fixed;
+            right: 120px;
+            top: 50px;
+            width: 12px;
+            height: 12px;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            border-bottom-left-radius: 6px;
+            border-top-left-radius: 6px;
+            background: #ffc000;
+        }
+
+        #overlayTooltip {
+            position: fixed;
+            background: #FFF9F0;
+            padding: 0px;
+
+            -webkit-box-shadow: #c0bbb4 0px 0px 10px;
+            -moz-box-shadow: #c0bbb4 0px 0px 10px;
+            box-shadow: #c0bbb4 0px 0px 10px;
+            border-radius: 8px;
+            z-index: 2;
+        }
+
+        #overlayTooltipIntroPart {
+            background: #FFF9F0;
+            padding: 0px;
+
+            -webkit-box-shadow: #c0bbb4 0px 0px 10px;
+            -moz-box-shadow: #c0bbb4 0px 0px 10px;
+            box-shadow: #c0bbb4 0px 0px 10px;
+            border-radius: 8px;
+            z-index: 2;
+        }
+
+        #overlayTooltipIntroPart_wind {
+            background: #FFF9F0;
+            padding: 0px;
+
+            -webkit-box-shadow: #c0bbb4 0px 0px 10px;
+            -moz-box-shadow: #c0bbb4 0px 0px 10px;
+            box-shadow: #c0bbb4 0px 0px 10px;
+            border-radius: 8px;
+            z-index: 2;
+        }
+
+
+        .overlayTooltipcontent {
+            font-size: 0.7em;
+            color: #656565;
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        span.tphighlight {
+            color: #eeb106;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div id="trigger0"></div>
+    <h1 class="heading">Title</h1>
+    <p class="description">Chained by neck, in rags, toothless, poor food. This happens to a women in 2022, Xuzhou(徐州),
+        one of the most well-being cities in China. How ironic.
+    </p>
+
+    <p class="description">
+        At the end of 2021, a story about an eight-children father at Fengxian(丰县), Xuzhou attracted many vloggers to
+        visit and record videos to propagate father's love and local poverty alleviation policies.
+    </p>
+
+    <p class="description">
+        On Jan 27 2022, <a href="javascript:void(0);" rel="external nofollow"
+                           onclick="showHideVideo()" style="color:#eeb106;">a TikTok video</a> went viral and sparked
+        outrage and shock. In this video, the mother was tied to her neck by a chain in a worn-out hub and was only
+        wearing thin clothing despite the freezing winter.
+    </p>
+
+    <p class="description">
+        This video triggered fevered discussion on social media about human trafficking, the abuse of women and their
+        limited rights in China’s impoverished rural areas. Under public pressure from social media, the county, city
+        and provincial authorities successively conducted several investigations into this incident and finally
+        confirmed that this woman was a victim of human trafficking.
+    </p>
+
+    <p class="description" style="margin-bottom: 3em">
+        By collecting and analyzing 4725 relevant popular posts from Jan 28 to Feb 28 on Weibo, one of the largest
+        Chinese social media platforms, including six investigation reports posted by authorities, this project intends
+        to visually demonstrate the key role public opinion played in this incident.
+    </p>
+
+    <p class="description" style="font-size: 0.6rem; color: #a1a1a1">
+        * Online discussion of this case has been heavily censored since it flared up, and a huge number of posts on
+        Weibo was removed by authorities. Therefore, "4725" did not represent the accurate number of posts discussing
+        this case on Weibo.
+    </p>
+
+    <!--遮挡div-->
+    <div onclick="showHideVideo()" id="newsVideoDivBlock"
+         style="display: none; position: fixed;top: 0px; left: 0px; background-color: black; opacity: 0.6"></div>
+
+    <!--铁链女链接视频-->
+    <div id="newsVideoDiv" style="display: none; position:fixed; z-index: 2">
+        <iframe width="702" height="395" src="https://www.youtube.com/embed/5npkIJ6NRr4" title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+    </div>
+</div>
+
+<div id="trigger1"></div>
+
+<!--more info (tooltip panel) icon -->
+<!--<div>-->
+<!--    <img id="showTooltipOverlayImgIntro" src="svg/info.svg" style="position:fixed;width:50px; top: 0px; right: 0px; z-index: 1; opacity: 0" onclick="showTooltipOverlayIntro()"/>-->
+<!--</div>-->
+
+<!--Intro部分整体tooltip-->
+<div id="overlayTooltipIntroPart" style="display: none; position:fixed; padding: 30px; z-index: 3">
+    <p class="overlayTooltipcontent" style="margin-bottom: 2em">
+        Each seed represents a popular Weibo post with the keyword “丰县(Fengxian)” from Jan 28, 2022 to Feb 28, 2022.
+    </p>
+    <div class="row">
+        <div class="col-lg">
+            <!--follower Tooltip-->
+            <div style="margin-bottom: 20px">
+                <p style="font-size: 0.8em; font-weight: bold; margin-bottom: 10px"> Followers </p>
+                <p class="overlayTooltipcontent" style="font-size: 0.7em">The size of the seed head shows how many
+                    followers the poster had at the time.</p>
+                <div id="followerTooltipIntro"></div>
+                <div class="overlayTooltipcontent"
+                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 100px; padding-right: 100px">
+                    <p style="display: inline-flex; margin-bottom: 0px">≤10K</p>
+                    <p style="display: inline-flex; margin-bottom: 0px">10K-1M</p>
+                    <p style="display: inline-flex; margin-bottom: 0px">>1M</p>
+                </div>
+            </div>
+
+            <!--retweet Tooltip-->
+            <div style="margin-bottom: 20px">
+                <p style="font-size: 0.8em; font-weight: bold; margin-bottom: 10px"> Retweets </p>
+                <p class="overlayTooltipcontent" style="font-size: 0.7em">The length of the seed stem represents the
+                    number of retweets.</p>
+                <div id="retweetTooltipIntro"></div>
+                <div class="overlayTooltipcontent"
+                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 100px; padding-right: 100px">
+                    <p style="display: inline-flex; margin-bottom: 0px; user-select: none;">≤500</p>
+                    <div style="display: inline-flex;">
+                        <p style="margin-bottom: 0px; user-select: none;">>500:</p>
+                        <div id="retweetDragBgIntro"
+                             style="background: #e5e1d9; opacity: 0.6; width:120px; height:6px; border-radius: 3px; justify-content: center; align-self: center; margin-left: 15px">
+                            <div id="retweetDragBoxIntro"
+                                 style="position: relative; top: -1px; left: 0px; width: 12px; height: 8px; border-radius: 4px; background: #FFCA36; ">
+                                <p id="retweetNumIntro"
+                                   style="position:relative; top: 6px; user-select: none;display: none">500</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!--comment Tooltip-->
+            <div style="margin-bottom: 20px">
+                <p style="font-size: 0.8em; font-weight: bold; margin-bottom: 10px"> Comments </p>
+                <p class="overlayTooltipcontent" style="font-size: 0.7em">The wing pattern shows the number of comments.
+                    (hover on the seed head to see patterns)</p>
+                <div id="commentTooltipIntro"></div>
+                <div class="overlayTooltipcontent"
+                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 100px; padding-right: 100px">
+                    <p style="display: inline-flex; margin-bottom: 0px">≤10</p>
+                    <p style="display: inline-flex; margin-bottom: 0px">10-100</p>
+                    <p style="display: inline-flex; margin-bottom: 0px">>100</p>
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="col-lg">
+            <!--vlevel tooltip-->
+            <div style="margin-bottom: 20px">
+                <p style="font-size: 0.8em; font-weight: bold; margin-bottom: 10px"> Account Type </p>
+                <p class="overlayTooltipcontent" style="font-size: 0.7em">The dot(s) near the seed head indicates Weibo
+                    account type of the poster.</p>
+                <div id="vlevelTooltipIntro"></div>
+                <div class="overlayTooltipcontent"
+                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 10px; padding-right: 10px">
+                    <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.1</p>
+                    <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.2</p>
+                    <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.3</p>
+                    <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Enterprise Account</p>
+                </div>
+            </div>
+
+            <!--like tooltip-->
+            <div style="margin-bottom: 20px">
+                <p style="font-size: 0.8em; font-weight: bold; margin-bottom: 10px"> Likes </p>
+                <p class="overlayTooltipcontent" style="font-size: 0.7em">The width of the seed wing represents the
+                    number of likes.</p>
+                <div id="likeTooltipIntro"></div>
+                <div class="overlayTooltipcontent"
+                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 100px; padding-right: 100px">
+                    <p style="display: inline-flex; margin-bottom: 0px; user-select: none;">≤5000</p>
+                    <div style="display: inline-flex;">
+                        <p style="margin-bottom: 0px; user-select: none;">>5000:</p>
+                        <div id="likeDragBgIntro"
+                             style="background: #e5e1d9; opacity: 0.6; width:120px; height:6px; border-radius: 3px; justify-content: center; align-self: center; margin-left: 15px">
+                            <div id="likeDragBoxIntro"
+                                 style="position: relative; top: -1px; left: 0px; width: 12px; height: 8px; border-radius: 4px; background: #FFCA36; ">
+                                <p id="likeNum" style="position:relative; top: 6px; user-select: none;display: none">
+                                    5000</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!--emotion Tooltip-->
+            <div style="margin-bottom: 20px">
+                <p style="font-size: 0.8em; font-weight: bold; margin-bottom: 10px"> Sentiment </p>
+                <p class="overlayTooltipcontent" style="font-size: 0.7em">The color of the the seed head represents the
+                    sentiment of the post text. (hover to see the animation)</p>
+                <div id="emotionTooltipIntro"></div>
+                <div class="overlayTooltipcontent"
+                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 100px; padding-right: 240px">
+                    <p style="display: inline-flex; margin-bottom: 0px; user-select: none">negative</p>
+                    <div style="display: inline-flex;">
+                        <div id="emotionDragBgIntro"
+                             style="background: #e5e1d9; opacity: 0.6; width:120px; height:6px; border-radius: 3px; justify-content: center; align-self: center; margin: 0px">
+                            <div id="emotionDragBoxIntro"
+                                 style="position: relative; top: -1px; left: 54px; width: 12px; height: 8px; border-radius: 4px; background: #FFCA36; ">
+                                <p id="emotionNum"
+                                   style="position:relative; top: 6px; user-select: none;display: none"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="display: inline-flex; margin-bottom: 0px; user-select: none">positive</p>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Intro部分tooltip遮挡div-->
+<div id="invisibleBlock_Intro" style="display: none; position: fixed; top: 0px; left: 0px; z-index: 2"
+     onclick="invisibleBlock_Intro_click()"></div>
+
+<!--添加视频的地方-->
+<div id="windvideoEnter"
+     style="position: fixed; top: 0px; left: 0px; background-color: #FFF9F0; display: none; z-index: 0">
+    <!--设置z-index：使得视频覆盖原来的svg-->
+    <!--    <div height = "100%" width = "100%" style="margin: 0 auto;">-->
+    <video id="videoclipEnter" height="100%" muted="muted"> <!--设置为muted就不用先interact with DOM了-->
+        <source src="asset/mp4/curve5.mp4" type="video/mp4"/>
+    </video>
+</div>
+
+<div id="windvideoExit"
+     style="position: fixed; top: 0px; left: 0px; background-color: #FFF9F0; display: none; z-index: 0">
+    <!--设置z-index：使得视频覆盖原来的svg-->
+    <!--    <div height = "100%" width = "100%" style="margin: 0 auto;">-->
+    <video id="videoclipExit" height="100%" muted="muted"> <!--设置为muted就不用先interact with DOM了-->
+        <source src="asset/mp4/curve_out.mp4" type="video/mp4"/>
+    </video>
+</div>
+
+<div class="row" style="width: 96%; margin: 0 auto;">
+    <div class="col-lg-5">
+        <article>
+            <p class="descriptionWithSvg" id="seedIntro1" style="opacity: 0;">Later, the form of samara seeds will be
+                used to visualize posts on social media.
+                <br><br>
+                This visual metaphor is selected due to its ability to spread and take hold like posts on social media,
+                and
+                its representation of freedom.</p>
+            <p class="descriptionWithSvg" id="seedIntro2" style="opacity: 0;">Each seed encodes 6 attributes of post
+                data.<br>
+                Click <img src="asset/svg/info.svg" style="height: 1rem; display: inline-flex"
+                           onclick="showTooltipOverlayIntro()" data-toggle="tooltip" data-bs-placement="bottom"
+                           title="detailed information"/> to see detailed information of encoding rules.
+            </p>
+
+            <p class="descriptionWithSvg" id="seedIntro3" style="opacity: 0;">But firstly, to set these seeds FREE, we
+                need... <br><br>
+                <span style="font-size: 1.2em"> WISPS OF WIND</span></p>
+            <!--            <p class="descriptionWithSvg" id="seedIntro4" style="opacity: 0;">Are WISPS OF WIND...</p>-->
+            <div id="windIntro1Div" style="opacity: 0">
+                <p class="descriptionWithSvg" id="windIntro1" style="opacity: 0;text-align: justify">Posts are categorized
+                    into 8 groups by the similarity of their hashtags, which are represented by 8 “wisps of wind”,
+                    because wind carries samara seeds just as hashtag groups contains posts. This visualization thus gives a
+                    vivid overview of all hashtag groups.<br><br>
+                    Click each wisp of wind to explore more.
+                    <br>
+                    Click <img src="asset/svg/info.svg" style="height: 1rem; display: inline-flex"
+                               onclick="showTooltipOverlayIntro_wind()" data-toggle="tooltip" data-bs-placement="bottom"
+                               title="detailed information"/> to see detailed information of encoding rules.
+
+                    <!--                Because there are parallels between wind carrying samara seeds and hashtag group containing posts, the form of wind is selected to represent different hashtag groups.-->
+                </p>
+            </div>
+
+            <p class="descriptionWithSvg" id="windIntro2" style="opacity: 0;">
+                <!--                This visualization offers an overview of these 8 groups in terms of number of view, number of discussion, number of originals, average sentiment and active time duration of each hashtag group.-->
+                Now let's move closer, to see seeds carried in these wisps of wind...
+            </p>
+
+
+            <div id="overlayTooltipIntroPart_wind" style="display: none; position:fixed; padding: 30px; padding-left: 50px; z-index: 3">
+
+                <p style=" margin-bottom: 0px; margin-bottom: 6px">
+                    <span style="font-weight: bold; font-size: 0.8em; ">Shape</span>
+                </p>
+
+
+                <div class="row" style="margin-bottom: 20px">
+                    <div class="col-lg-2" style="">
+                        <img src="asset/svg/curve_shape1.svg"
+                             style="display: block; width:4rem;height:auto;margin-top: 2rem; margin-bottom: 1.2rem"/>
+                        <img src="asset/svg/curve_shape2.svg"
+                             style="display: block; width:4rem;height:auto;margin-bottom: 1.2rem"/>
+                        <img src="asset/svg/curve_shape3.svg" style="display: block; width:4rem;height:auto;"/>
+
+                    </div>
+
+                    <div class="col-lg" style="">
+                        <p style="font-size: 0.7em; color: #656565; text-align: center;">Number of view</p>
+
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;">
+                            <500M</p>
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;">
+                            500M-4B</p>
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;">>4B</p>
+
+
+                    </div>
+
+                    <div class="col-lg" style="">
+                        <p style="font-size: 0.7em; color: #656565; text-align: center;">Number of discussion</p>
+
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;">
+                            <200K</p>
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;">
+                            200K-2M</p>
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;">>2M</p>
+
+                    </div>
+                    <div class="col-lg" style="">
+                        <p style="font-size: 0.7em; color: #656565; text-align: center;">Number of originals</p>
+
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;"><5K</p>
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;">
+                            5K-50K</p>
+                        <p style="font-size: 0.5em; color: #656565; text-align: center; margin-bottom: 1.8rem;">>50K</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg">
+                        <p style="margin-bottom: 0px; margin-bottom: 1rem">
+                            <span style="font-weight: bold; font-size: 0.8em;">Wind tail color</span>
+                            <span style="display: inline-flex;color: #656565; font-size: 0.7em; margin:0px; margin-left: 30px">- average sentiment</span>
+                        </p>
+                        <div style="display: flex; align-items: center; ">
+                            <img src="asset/svg/curve_shape6.svg"
+                                 style="display:inline-flex;width:6rem;height:auto;margin-right: 5px"/>
+
+                            <div style="display: inline-flex; justify-content: space-between; align-items: center; margin-left: 0px">
+                                <p style="display: inline-flex; font-size: 0.5em; color: #656565; margin-bottom: 0px; margin-right: 0.6rem">
+                                    negative</p>
+                                <img src="asset/svg/gradient.svg" style="width: 6rem">
+                                <p style="display: inline-flex; font-size: 0.5em; color: #656565; margin-bottom: 0px; margin-left: 0.6rem">
+                                    positive</p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-lg">
+                        <p style="margin-bottom: 0px; margin-bottom: 0.7rem">
+                            <span style="font-weight: bold; font-size: 0.8em;">Length</span>
+                            <span style="display: inline-flex;color: #656565; font-size: 0.7em; margin:0px; margin-left: 30px">- active time duration</span>
+
+                        </p>
+                        <div style="display: flex; align-items: center; ">
+                            <img src="asset/svg/curve_shape5.svg"
+                                 style="display:inline-flex;width:4rem;height:auto;margin-right: 5px"/>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="descriptionWithSvg" id="windIntro4" style="opacity: 0;">
+            </p>
+
+        </article>
+    </div>
+    <div class="col-lg-7">
+        <div id="samaraIntro" style="display: block"></div>     <!--放第一次出现的Samara Seed, 放d3 svg的地方-->
+    </div>
+</div>
+
+<!--wind部分 hashtag的tooltip-->
+
+<!--阻挡wind tooltip的div-->
+<div id="tooltipInvisibleBlockDiv_wind" style="display:none; z-index: 1; position:fixed;top: 0px; left: 0px"
+     onclick="tooltipInvisibleBlockDiv_wind_click()">
+
+</div>
+
+<!--hashtag的tooltip-->
+<div class="seedTooltip" id="hashtagTooltip_wind"
+     style="left: 150px; display: none; flex-direction: column; user-select: none; z-index: 2; width: 350px">
+
+    <div style="margin: 10px; font-size: 1em; display: flex; align-items: flex-end; flex-wrap: wrap; color: #eeb106">
+        <div id="hashtagGroupNum_wind" style="font-weight: bold; padding-right: 8px; line-height: 1.2;"> Hashtag Group ·
+            1
+        </div>
+    </div>
+
+    <div id="hashtagGroupSubtitle_wind" style="font-size: 0.7em; line-height: 1.2; margin: 10px; margin-top: 5px"> This
+        hashtag group contains hashtags related to investigation report 1 (the first announcement of Fengxian)
+    </div>
+
+    <div id="hashtagGroupInclude_wind"
+         style="font-size: 0.4em; color: #b7b7b7;margin-left: 10px; margin-right: 10px; margin-bottom: 20px; max-height: 150px; overflow: auto"
+         content="123">
+        included hashtags:<br>
+        #丰县辟谣被拴破屋八孩母亲系拐卖 <br>
+        #丰县回应八孩母亲被拴破屋 <br>
+        #江苏丰县回应八孩母亲被拴破屋 <br>
+        #官方回应八孩母亲被拴破屋疑遭家暴 <br>
+        #官方回应徐州八孩母亲被拴破屋 <br>
+        #官方通报生育八孩女子情况 <br>
+        #丰县官方通报生育八孩女子情况 <br>
+        #官方通报徐州丰县生育八孩女子情况 <br>
+        #官方救治江苏八孩母亲 <br>
+        #江苏丰县回应生育八孩女子情况 <br>
+        #官方通报丰县生育8孩女子事件 <br>
+    </div>
+
+    <div style="margin-left: 10px; padding-left: 0px; padding-right: 0px; margin-right: 10px; margin-top: 10px; display: flex; justify-content: space-between;">
+        <!--display: flex-->
+        <div style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">
+            <div style="font-size: 0.4em; color: #b7b7b7; display: inline">negative</div>
+        </div>
+
+        <div style="vertical-align: top; display: inline-flex; height: 24px; position: relative">
+            <div class="emotionScale" id="emotionScaleBox_wind"
+                 style="left:160px;position: absolute; margin-top: -1px; height: 10px; width: 6px; "></div>
+            <img src="asset/svg/gradient.svg" style="display:inline;width:180px;height:auto;"/>
+        </div>
+
+        <div style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">
+            <div style="font-size: 0.4em; color: #b7b7b7; display: inline">positive</div>
+        </div>
+    </div>
+
+    <a id="showFullHashtag_wind" href="javascript:void(0);" rel="external nofollow" onclick="showFullHashtag_wind()"
+       style="font-size: 0.4em; margin-left: 10px; color: #eeb106; display: inline-flex; margin-bottom: 8px">show
+        more</a>
+    <div class="divider-flex"></div>
+    <div style="display: flex; justify-content:center;/*水平居中*/">
+        <div style="display: inline;  margin-left: 20px; margin-right: 20px">
+            <div class="svgDiv" data-toggle="tooltip" data-bs-placement="bottom" title="Number of views">
+                <img src="asset/svg/view.svg" style="display:inline;width:20px;height:20px"/>
+            </div>
+            <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">
+                <div id="windView" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>
+            </div>
+        </div>
+
+        <div style="display: inline; margin-left: 20px; margin-right: 20px">
+            <div class="svgDiv" data-toggle="tooltip" data-bs-placement="bottom" title="Number of comments">
+                <img src="asset/svg/comment.svg" style="display:inline;width:20px;height:20px"/>
+            </div>
+            <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">
+                <div id="windComment" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>
+            </div>
+        </div>
+
+        <div style="display: inline;  margin-left: 20px; margin-right: 20px">
+            <div class="svgDiv" data-toggle="tooltip" data-bs-placement="bottom" title="Number of originals">
+                <img src="asset/svg/originals.svg" style="display:inline;width:20px;height:20px"/>
+            </div>
+            <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">
+                <div id="windOriginal" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!--主体时间线部分-->
+<div id="samaraTimeline" style="width: 96%; margin: 0 auto;">
+
+    <!--右侧滑条-->
+    <div id="streamGraphScroll" style="display:none; position: fixed; top:0px; right:20px"></div>
+</div>
+
+<!--bootstrap5 tooltip 属性设置-->
+<script>
+    $(function () {
+        $("[data-toggle='tooltip']").tooltip();
+
+        //设置tooltip为点击之后隐藏
+        $('[data-toggle="tooltip"]').click(function () {
+            $('[data-toggle="tooltip"]').tooltip("hide");
+
+        });
+    });
+</script>
+
+<!--基本函数设置-->
+<script>
+    function transNum(x) //转化数字格式
+    {
+        if (x < 1000)
+            return x.toString();
+        else if (x < 10000)
+            return x.toString()[0] + ',' + x.toString().substring(1); //补上千位的逗号
+        else if (x < 1000000)
+            if ((x / 1000).toFixed(1)[(x / 1000).toFixed(1).length - 1] == "0") //如果末尾为0，舍去最后两位
+                return (x / 1000).toFixed(1).substring(0, (x / 1000).toFixed(1).length - 2) + "K"
+            else
+                return (x / 1000).toFixed(1) + "K"
+        else if (x < 1000000000)
+            if ((x / 1000000).toFixed(1)[(x / 1000000).toFixed(1).length - 1] == "0") //如果末尾为0，舍去最后两位
+                return (x / 1000000).toFixed(1).substring(0, (x / 1000000).toFixed(1).length - 2) + "M"
+            else
+                return (x / 1000000).toFixed(1) + "M"
+        else if ((x / 1000000000).toFixed(1)[(x / 1000000000).toFixed(1).length - 1] == "0") //如果末尾为0，舍去最后两位
+            return (x / 1000000000).toFixed(1).substring(0, (x / 1000000000).toFixed(1).length - 2) + "B"
+        else
+            return (x / 1000000000).toFixed(1) + "B"
+    }
+</script>
+
+<!--设置铁链女视频属性-->
+<script>
+    //设置视频位置
+    d3.select("#newsVideoDiv")
+        .style("top", `${(window.innerHeight - 395) / 2}px`)
+        .style("left", `${(window.innerWidth - 702) / 2}px`)
+
+    //设置遮挡div位置与大小
+    d3.select("#newsVideoDivBlock")
+        .style("width", `${window.innerWidth}px`)
+        .style("height", `${window.innerHeight}px`);
+
+    var isVideoShow = false;
+
+    var showHideVideo = function () {
+        console.log("jode")
+        if (!isVideoShow) {
+            d3.select("#newsVideoDiv")
+                .style("display", "block");
+            d3.select("#newsVideoDivBlock")
+                .style("display", "block");
+
+            isVideoShow = true;
+
+            //禁止页面滑动
+            let mo = function (e) {
+                passive: false;
+            };
+            document.body.style.overflow = 'hidden';
+            document.addEventListener("touchmove", mo, false);
+        } else {
+            d3.select("#newsVideoDiv")
+                .style("display", "none");
+            d3.select("#newsVideoDivBlock")
+                .style("display", "none");
+
+            isVideoShow = false;
+
+            //允许页面滑动
+            let mo = function (e) {
+                passive: false
+            };
+            document.body.style.overflow = '';
+            document.removeEventListener("touchmove", mo, false);
+        }
+
+    }
+</script>
+
+<!--设置整体tooltip-->
+<script>
+    //右下角图标
+    // d3.select("#showTooltipOverlayImgIntro")
+    //     .style("right", `${160 / 1728 * window.innerWidth}px`)
+    //     .style("top", `${0.91 * window.innerHeight}px`)
+
+    //整体tooltip大小
+    d3.select("#overlayTooltipIntroPart")
+        .style("width", `${0.74 * window.innerWidth}px`)
+        .style("height", `${640 / 886 * window.innerHeight}px`)
+        .style("top", `${123 / 886 * window.innerHeight}px`)
+        .style("left", `${0.13 * window.innerWidth}px`);
+
+    d3.select("#overlayTooltipIntroPart_wind")
+        .style("width", `${0.54 * window.innerWidth}px`)
+        .style("height", `${450 / 886 * window.innerHeight}px`)
+        .style("top", `${218 / 886 * window.innerHeight}px`)
+        .style("left", `${0.23 * window.innerWidth}px`);
+
+    //设置遮挡div
+    d3.select("#invisibleBlock_Intro")
+        .style("height", `${window.innerHeight}px`)
+        .style("width", `${window.innerWidth}px`)
+        .style("opacity", 0.3)
+        .style("background-color", "#000")
+
+
+    var isShowTooltipOverlayIntro = false;
+    //点击右下角图标事件
+    var showTooltipOverlayIntro = function () {
+        if (!isShowTooltipOverlayIntro) {
+            d3.select("#invisibleBlock_Intro")
+                .style("display", "block");
+
+            d3.select("#overlayTooltipIntroPart")
+                .style("display", "block");
+            isShowTooltipOverlayIntro = true;
+
+        }
+    }
+
+    var isShowTooltipOverlayIntro_wind = false;
+    //点击右下角图标事件
+    var showTooltipOverlayIntro_wind = function () {
+        if (!isShowTooltipOverlayIntro_wind) {
+            d3.select("#invisibleBlock_Intro")
+                .style("display", "block");
+
+            d3.select("#overlayTooltipIntroPart_wind")
+                .style("display", "block");
+            isShowTooltipOverlayIntro_wind = true;
+
+        }
+    }
+
+    var invisibleBlock_Intro_click = function () {
+        if (isShowTooltipOverlayIntro) {
+            d3.select("#invisibleBlock_Intro")
+                .style("display", "none");
+
+            d3.select("#overlayTooltipIntroPart")
+                .style("display", "none");
+
+            isShowTooltipOverlayIntro = false;
+        }
+
+        if (isShowTooltipOverlayIntro_wind) {
+            d3.select("#invisibleBlock_Intro")
+                .style("display", "none");
+
+            d3.select("#overlayTooltipIntroPart_wind")
+                .style("display", "none");
+
+            isShowTooltipOverlayIntro_wind = false;
+        }
+
+    }
+
+
+    //follower部分tooltip
+    var followerSvg = d3.select("#followerTooltipIntro")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var followerDefs = followerSvg.append("defs");
+
+    geneSeed_Tp_Intro(followerSvg, followerDefs, 1, 100, 30, 1, 0.5, 1, false, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp_Intro(followerSvg, followerDefs, 2, 280, 27.5, 2, 0.5, 1, false, "yellow", 0.3, 1, 1, 1);
+    geneSeed_Tp_Intro(followerSvg, followerDefs, 3, 460, 25, 3, 0.5, 1, false, "yellow", 0.3, 1, 1, 1);
+
+
+    //vlevel部分tooltip
+    var vlevelSvg = d3.select("#vlevelTooltipIntro")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var vlevelDefs = vlevelSvg.append("defs");
+
+    geneSeed_Tp_Intro(vlevelSvg, vlevelDefs, 4, 42, 30, 1, 0.5, 1, true, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp_Intro(vlevelSvg, vlevelDefs, 5, 170, 30, 1, 0.5, 1, true, "yellow", 0.3, 1, 1, 1);
+    geneSeed_Tp_Intro(vlevelSvg, vlevelDefs, 6, 320, 30, 1, 0.5, 1, true, "gold", 0.3, 1, 1, 1);
+    geneSeed_Tp_Intro(vlevelSvg, vlevelDefs, 7, 470, 30, 1, 0.5, 1, true, "blue", 0.3, 1, 1, 1);
+
+    //retweet部分tooltip
+    var retweetSvg = d3.select("#retweetTooltipIntro")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var retweetDefs = retweetSvg.append("defs");
+
+    geneSeed_Tp_Intro(retweetSvg, retweetDefs, 8, 100, 30, 1, 0.5, 1, false, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp_Intro(retweetSvg, retweetDefs, 9, 320, 32, 1, 0.5, 1, false, "yellow", 0.3, 1, 1, 500);
+    //滑条：cy从30到42；retweet从500到5k
+
+    //likes部分tooltip
+    var likeSvg = d3.select("#likeTooltipIntro")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var likeDefs = likeSvg.append("defs");
+
+    geneSeed_Tp_Intro(likeSvg, likeDefs, 10, 100, 30, 1, 0.5, 1, false, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp_Intro(likeSvg, likeDefs, 11, 320, 32, 1, 0.5, 1, false, "yellow", 0.3, 1, 1, 500);
+
+    //comment部分tooltip
+    var commentSvg = d3.select("#commentTooltipIntro")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var commentDefs = commentSvg.append("defs");
+
+    geneSeed_Tp_Intro(commentSvg, commentDefs, 12, 100, 30, 1, 0.5, 1, false, "normal", 0.3, 1, 1, 1);
+    geneSeed_Tp_Intro(commentSvg, commentDefs, 13, 270, 30, 1, 0.5, 2, false, "yellow", 0.3, 1, 100, 1);
+    geneSeed_Tp_Intro(commentSvg, commentDefs, 14, 460, 30, 1, 0.5, 3, false, "yellow", 0.3, 1, 200, 1);
+
+    //emotion部分tooltip
+    var emotionSvg = d3.select("#emotionTooltipIntro")
+        .append("svg")
+        .attr("width", `100%`)
+        .attr("height", `${50}px`)
+
+    var emotionDefs = emotionSvg.append("defs");
+
+    geneSeed_Tp_Intro(emotionSvg, emotionDefs, 15, 210, 30, 1, 0.5, 3, false, "yellow", 0.3, 1, 200, 1);
+
+
+    function geneSeed_Tp_Intro(tooltipSvg, tooltipDef, index, cx, cy, followercat, emo_neg_prob, commentCat, isVlevelOn, vlevel, gScale, like, comment, retweet,) {
+        var scaleLengthId;
+        var scaleWidthId;
+
+        //like的映射计算; like的max值为2457804; 计算scaleWidthId
+        let likeScale = d3.scaleLinear()
+            .domain([0, 2.7])
+            .range([1, 3]); //映射到的scaleWid范围
+        if (like <= 5000) {
+            scaleWidthId = 1;
+        } else {
+            scaleWidthId = likeScale(Math.log(like / 5000) / Math.log(10)) //取以10为底的对数
+        }
+
+        //retweet的映射计算；retweet的max值为418438；计算scaleLengthId
+        let retweetScale = d3.scaleLinear()
+            .domain([0, 3])
+            .range([1, 3]); //映射到的scaleLen范围
+        if (retweet <= 500) {
+            scaleLengthId = 1;
+        } else {
+            scaleLengthId = retweetScale(Math.log(retweet / 500) / Math.log(10)) //取以10为底的对数
+        }
+
+
+        var group1 = tooltipSvg
+            .append("g")
+            .attr("id", `Tp_seed_Intro${index}`)
+            .attr("transform", `translate(${cx}, ${cy}), rotate(-30) ,scale(${gScale})`) //rotate(-20,300,400)
+        //.attr("transform","rotate(30,600,400)");
+
+        //叶子宽度参数调整
+        group1.append("path")
+            .attr("d", `M ${185.11 * scaleLengthId} 23 ` +
+                `C ${192.21 * scaleLengthId} 34.23 ${156.54 * 1.2 * scaleLengthId} ${57.89 * scaleWidthId} ${132.11 * scaleLengthId} ${57.89 * scaleWidthId} ` +
+                `C ${100.6 * scaleLengthId} ${57.89 * scaleWidthId} ${75.04 * 0.8 * scaleLengthId} 30.79 38.58 30.79 ` +
+                "C 50.93 16.55 69 8.67 69 8.67 " +
+                `S ${162.94 * scaleLengthId} -12.13 ${185.11 * scaleLengthId} 23 ` +
+                "Z")
+            .style("fill", "#FFCA36")
+            .style("opacity", "0.2")
+            .style("stroke", "none");
+
+        //评论数量调整纹理
+        if (commentCat == 1) {
+
+            group1.append("path")
+                .attr("d", `M ${92.56 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${4.3} C ${109.32 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${4.3} ${119.8 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${18.52 * scaleWidthId} ${121.61 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${32.74 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M${125.75 * scaleLengthId},2.55 C ${142.51 * scaleLengthId},2.55,${153 * scaleLengthId},${16.77 * scaleWidthId},${154.8 * scaleLengthId},${31 * scaleWidthId}`)
+                // .attr("stroke", "#FFCA36")
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+
+        } else if (commentCat == 2) {
+
+            group1.append("path")
+                .attr("d", `M ${83.27 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${5.93 - Math.min(2, 2 * (scaleLengthId - 1))} C ${100.04 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${5.93 - Math.min(2, 2 * (scaleLengthId - 1))} ${110.52 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${20.15 * 0.8 * scaleWidthId} ${112.33 * (1.2 - 0.2 * scaleLengthId) * scaleLengthId} ${34.37 * 0.8 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${107.93 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} 2.55 C ${124.7 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} 2.55 ${138.45 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} ${16.77 * scaleWidthId} ${140.99 * (1.1 - 0.1 * scaleLengthId) * scaleLengthId} ${39.41 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${134 * scaleLengthId} 2.55 C ${150.76 * scaleLengthId} 2.55 ${159.2 * scaleLengthId} ${16.77 * scaleWidthId} ${161 * scaleLengthId} ${30.99 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+
+
+        } else {
+
+            group1.append("path")
+                .attr("d", `M ${71.86 * scaleLengthId} ${7.82 - Math.min(4, 4 * (scaleLengthId - 1))} C ${88.62 * scaleLengthId} 7.82 ${97.72 * scaleLengthId} ${24 * scaleWidthId} ${99.53 * scaleLengthId} ${38.19 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${97.8 * scaleLengthId} ${4.3 - Math.min(1.2, 1.2 * (scaleLengthId - 1))} C ${114.57 * scaleLengthId} 4.3 ${122.31 * scaleLengthId} ${29.05 * scaleWidthId} ${124.12 * scaleLengthId} ${43.3 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${119.78 * scaleLengthId} 2.55 C ${136.55 * scaleLengthId} 2.55 ${144.29 * scaleLengthId} ${27.3 * scaleWidthId} ${146.09 * scaleLengthId} ${41.55 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+
+            group1.append("path")
+                .attr("d", `M ${140.49 * scaleLengthId} ${2.55 + Math.min(2.5, 2.5 * (scaleLengthId - 1))} C ${157.26 * scaleLengthId} 2.55 ${163.49 * scaleLengthId} ${22.83 * scaleWidthId} ${164.84 * scaleLengthId} ${33.67 * scaleWidthId}`)
+                .style("stroke-linecap", "round")
+                .attr("stroke-width", "2")
+                .attr("opacity", "0.2")
+                .attr("fill", "none")
+                .attr("class", `Tp_seedleaf_Intro${index}`)
+                .style("stroke", "#FFCA36");
+        }
+
+        //悬停交互
+        var mouseover = function (d) {
+            console.log(d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle_Intro")[1]
+            )
+
+            d3.select(`#Tp_emo_grad_end_Intro${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle_Intro")[1]}`)
+                .transition()
+                .duration(500)
+                .attr("offset", "1")
+                .style("stop-opacity", "100%")
+
+            d3.select(`#Tp_emo_grad_start_Intro${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle_Intro")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .style("stop-color", "#ffca36");
+
+            d3.selectAll(`.Tp_seedleaf_Intro${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle_Intro")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .attr("opacity", "100%");
+
+        }
+        var mousemove = function (d) {
+
+        }
+        var mouseleave = function (d) {
+
+            d3.select(`#Tp_emo_grad_end_Intro${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle_Intro")[1]}`)
+                .transition()
+                .duration(500)
+                .attr("offset", "0.1")
+                .style("stop-opacity", "0")
+
+            d3.select(`#Tp_emo_grad_start_Intro${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle_Intro")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .style("stop-color", d3.select(
+                    `#Tp_emo_grad_end_Intro${d3.select(this)
+                        .attr("id")
+                        .split("Tp_tooltipCircle_Intro")[1]}`)
+                    .style("stop-color"));
+
+            d3.selectAll(`.Tp_seedleaf_Intro${d3.select(this)
+                .attr("id")
+                .split("Tp_tooltipCircle_Intro")[1]}`)
+                .transition()
+                .duration(500)
+                // .attr("offset", "1")
+                .attr("opacity", "0.2");
+        }
+
+
+        //叶子长度参数调整; 粉丝数影响头部大小
+        if (followercat == 1) {
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 " +
+                    "C 46 7.89 29.85 6.42 20.6 6.77 " +
+                    `C 9.22 7.2 ${-1.68} 9.24 ${0.22} 18.61` +
+                    `C 2.28 28.77 8.25 ${37} 21.44 ${37} ` +
+                    "C 44 37 57.07 12.5 75 8.92 " +
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `Tp_seedStem_Intro${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+            group1.append("circle")
+                .attr("cx", 24)
+                .attr("cy", 26)
+                .attr("r", 18)
+                .attr("id", `Tp_tooltipCircle_Intro${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+
+        } else if (followercat == 2) {
+
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 " +
+                    "C 46 7.89 29.85 6.42 20.6 6.77 " +
+                    "C 9.22 7.2 -16.088 6.503 -14.043 25.517 " +
+                    "C -12.048 39.53 -3.46 53.836 19.941 52.99 " +
+                    "C 48.698 50.735 57.07 12.5 75 8.92 " +
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `Tp_seedStem_Intro${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+            group1.append("circle")
+                .attr("cx", 18)
+                .attr("cy", 32)
+                .attr("r", 25)
+                .attr("id", `Tp_tooltipCircle_Intro${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+
+        } else {
+
+            group1.append("path")
+                .attr("d", "M 57.6 6.89 C 46 7.89 29.85 6.42 20.6 6.77 C 9.22 7.2 -41.583 4.467 -40.905 37.759 C -39.289 56.31 -25.731 82.914 10.897 81.111 C 57.311 75.993 52.579 16.323 75 8.92" +
+                    `S ${162.06 * scaleLengthId} -6 ${185.11 * scaleLengthId} 23 ` +
+                    `C ${181.44 * scaleLengthId} ${11.63 + 1 * scaleLengthId} ${157.88 * scaleLengthId} 0 ${126.41 * (1.2 - 0.2 * scaleLengthId) * (scaleLengthId)} 0 ` +
+                    "S 81.12 4.86 57.6 6.89 " +
+                    "Z")
+                .attr("id", `Tp_seedStem_Intro${index}`)
+                .style("fill", "#FFCA36")
+                .style("stroke", "none");
+
+            group1.append("circle")
+                .attr("cx", 15)
+                .attr("cy", 35)
+                .attr("r", 30)
+                .attr("id", `Tp_tooltipCircle_Intro${index}`)
+                .attr("fill", "#000")
+                .attr("opacity", "0")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+        }
+
+        //定义情感的线性渐变
+        {
+            //目前：为每一个帖子定制一个defs：长度不同（x2不同）；末端颜色不同
+            let emo_grad = tooltipDef.append("linearGradient")
+                .attr("id", `Tp_emo_grad_Intro${index}`)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", "57.6")
+                .attr("y1", "6.89")
+                .attr("x2", `${185.11 * scaleLengthId}`)
+                .attr("y2", "23");
+
+            //内容情感
+            if (emo_neg_prob <= 0.5) {
+                // console.log("a")
+                let a = d3.rgb(129, 233, 59);	//积极一端的颜色
+                let b = d3.rgb(255, 202, 54);	//橙色
+                let linear = d3.scaleLinear()
+                    .domain([0, 0.5])
+                    .range([0, 1])
+                let compute = d3.interpolate(a, b);
+                let endColor = compute(linear(emo_neg_prob))
+
+                let stop1 = emo_grad.append("stop")
+                    .attr("id", `Tp_emo_grad_start_Intro${index}`)
+                    .attr("offset", "0")
+                    .style("stop-color", endColor);
+
+                let stop2 = emo_grad.append("stop")
+                    .attr("id", `Tp_emo_grad_end_Intro${index}`)
+                    .attr("offset", "0.1")
+                    .style("stop-opacity", "0")
+                    .style("stop-color", endColor);
+
+                d3.select(`#Tp_seedStem_Intro${index}`)
+                    .style("fill", "url(#" + emo_grad.attr("id") + ")");
+
+            } else {
+                let a = d3.rgb(237, 28, 36);	//消极一端的颜色
+                let b = d3.rgb(255, 202, 54);	//橙色
+                let linear = d3.scaleLinear()
+                    .domain([0.5, 1])
+                    .range([0, 1])
+                let compute = d3.interpolate(b, a);
+                let endColor = compute(linear(emo_neg_prob))
+
+                let stop1 = emo_grad.append("stop")
+                    .attr("id", `Tp_emo_grad_start_Intro${index}`)
+                    .attr("offset", "0")
+                    .style("stop-color", endColor);
+
+                let stop2 = emo_grad.append("stop")
+                    .attr("id", `Tp_emo_grad_end_Intro${index}`)
+                    .attr("offset", "0.1")
+                    .style("stop-opacity", "0")
+                    .style("stop-color", endColor);
+
+                d3.select(`#Tp_seedStem_Intro${index}`)
+                    .style("fill", "url(#" + emo_grad.attr("id") + ")");
+
+            }
+        }
+
+
+        if (isVlevelOn) {
+            // 微博等级
+            if (vlevel == "normal") {
+                group1.append("circle")
+                    .attr("cx", "8")
+                    .attr("cy", "-5")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.3")
+            } else if (vlevel == "yellow") {
+                group1.append("circle")
+                    .attr("cx", "8")
+                    .attr("cy", "-5")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.5")
+                group1.append("circle")
+                    .attr("cx", "32")
+                    .attr("cy", "-8")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.3")
+            } else if (vlevel == "gold") {
+                group1.append("circle")
+                    .attr("cx", "8")
+                    .attr("cy", "-5")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.8")
+                group1.append("circle")
+                    .attr("cx", "32")
+                    .attr("cy", "-8")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.5")
+                group1.append("circle")
+                    .attr("cx", "56")
+                    .attr("cy", "-8")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#FFCA36")
+                    .attr("opacity", "0.3")
+            } else {
+                group1.append("circle")
+                    .attr("cx", "8")
+                    .attr("cy", "-5")
+                    .attr("r", "10")
+                    .attr("stroke", "none")
+                    .attr("fill", "#3694ff")
+                    .attr("opacity", "0.8")
+            }
+        }
+
+    }
+
+
+</script>
+
+<!--读取hashtag 的json数据-->
+<script>
+    let hashtagNodes;
+
+    //读取hashtag相关数据
+    d3.json("asset/json/hashtagGroup_unlinked.json").then(function (data) {
+
+        hashtagNodes = d3.range(1, 8 + 1).map(function (d, i) {
+            return {
+                event: data[d.toString()]["event"],
+                hashtags: data[d.toString()]["hashtags"],
+                sentiment: data[d.toString()]["sentiment"],
+                view: data[d.toString()]["view"],
+                discussion: data[d.toString()]["discussion"],
+                original: data[d.toString()]["original"],
+            }
+        });
+
+    });
+
+</script>
+
+<!--wind部分tooltip; windBlockDiv点击-->
+<script>
+
+    d3.select("#tooltipInvisibleBlockDiv_wind")
+        .style("height", `${window.innerHeight}px`)
+        .style("width", `${window.innerWidth}px`);
+
+
+    var tooltipInvisibleBlockDiv_wind_click = function () {
+        isTooltipFixed_wind = false;
+        //隐藏div阻挡栏
+        d3.select("#tooltipInvisibleBlockDiv_wind")
+            .style("display", "none")
+        //隐藏tooltip
+        d3.select("#hashtagTooltip_wind")
+            .style("display", "none")
+
+        //初始化为show more
+        isshowFullHashtag_wind = false;
+        d3.select("#showFullHashtag_wind").html("show more");
+    }
+
+    var isTooltipFixed_wind = false;
+
+    var isshowFullHashtag_wind = false;
+    var showFullHashtag_wind = function () {
+        if (!isshowFullHashtag_wind) {
+            //交换长短内容的位置
+            let str = d3.select("#hashtagGroupInclude_wind").attr("content");
+
+            d3.select("#hashtagGroupInclude_wind")
+                .attr("content", d3.select("#hashtagGroupInclude_wind").html());
+
+            d3.select("#hashtagGroupInclude_wind")
+                .html(str);
+
+            d3.select("#showFullHashtag_wind").html("show less");
+
+            isshowFullHashtag_wind = true;
+        } else {
+            //交换长短内容的位置
+            let str = d3.select("#hashtagGroupInclude_wind").attr("content");
+
+            d3.select("#hashtagGroupInclude_wind")
+                .attr("content", d3.select("#hashtagGroupInclude_wind").html());
+
+            d3.select("#hashtagGroupInclude_wind")
+                .html(str);
+
+            d3.select("#showFullHashtag_wind").html("show more");
+
+            isshowFullHashtag_wind = false;
+        }
+
+    }
+</script>
+
+<!--Intro 部分 dragbox 拖动-->
+<!--retweet dragbox 拖动-->
+<script>
+    var retweetDragBox = document.getElementById("retweetDragBoxIntro")
+    retweetDragBox.onmousedown = function (e) {
+
+        //显示tooltip
+        d3.select("#retweetNumIntro")
+            .style("display", "block")
+
+        var e = e || window.event // 兼容ie浏览器
+
+        console.log(retweetDragBox.offsetLeft)
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof retweetDragBox.setCapture !== 'undefined') {
+            retweetDragBox.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.getElementById("retweetDragBgIntro").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if (left < 0)
+                left = 0;
+            if (left > 108)
+                left = 108;
+
+            let retweetNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([500, 5000])
+            let retweetYScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([32, 42])
+
+            //更改tooltip内容
+            d3.select("#retweetNumIntro")
+                .html(parseInt(retweetNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed_Intro9")
+                .remove();
+            geneSeed_Tp_Intro(retweetSvg, retweetDefs, 9, 320, retweetYScale(left), 1, 0.5, 1, false, "yellow", 0.3, 1, 1, parseInt(retweetNumScale(left)));
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            retweetDragBox.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+            d3.select("#retweetNumIntro")
+                .style("display", "none")
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof retweetDragBox.releaseCapture !== 'undefined') {
+                retweetDragBox.releaseCapture()
+            }
+        }
+
+    }
+</script>
+
+<!--like dragbox 拖动-->
+<script>
+    var likeDragBox = document.getElementById("likeDragBoxIntro")
+    likeDragBox.onmousedown = function (e) {
+
+        //显示tooltip
+        d3.select("#likeNum")
+            .style("display", "block")
+
+        var e = e || window.event // 兼容ie浏览器
+
+        console.log(likeDragBox.offsetLeft)
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof likeDragBox.setCapture !== 'undefined') {
+            likeDragBox.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.getElementById("likeDragBgIntro").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if (left < 0)
+                left = 0;
+            if (left > 108)
+                left = 108;
+
+            let likeNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([5000, 50000])
+            // let likeYScale = d3.scaleLinear()
+            //     .domain([0, 108])
+            //     .range([32, 42])
+
+            //更改tooltip内容
+            d3.select("#likeNum")
+                .html(parseInt(likeNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed_Intro11")
+                .remove();
+            geneSeed_Tp_Intro(likeSvg, likeDefs, 11, 320, 32, 1, 0.5, 1, false, "yellow", 0.3, parseInt(likeNumScale(left)), 1, 1);
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            likeDragBox.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+            d3.select("#likeNum")
+                .style("display", "none")
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof likeDragBox.releaseCapture !== 'undefined') {
+                likeDragBox.releaseCapture()
+            }
+        }
+
+    }
+</script>
+
+<!--emotion dragbox 拖动-->
+<script>
+    var emotionDragBox = document.getElementById("emotionDragBoxIntro")
+    emotionDragBox.onmousedown = function (e) {
+
+        var e = e || window.event // 兼容ie浏览器
+
+        console.log(emotionDragBox.offsetLeft)
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof emotionDragBox.setCapture !== 'undefined') {
+            emotionDragBox.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.getElementById("emotionDragBgIntro").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if (left < 0)
+                left = 0;
+            if (left > 108)
+                left = 108;
+
+            let emotionNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([1, 0])
+            // let likeYScale = d3.scaleLinear()
+            //     .domain([0, 108])
+            //     .range([32, 42])
+
+            // //更改tooltip内容
+            // d3.select("#likeNum")
+            //     .html(parseInt(likeNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed_Intro15")
+                .remove();
+            d3.select("#Tp_emo_grad_Intro15")
+                .remove(); //删除渐变
+            console.log(`emo${emotionNumScale(left)}`)
+            geneSeed_Tp_Intro(emotionSvg, emotionDefs, 15, 210, 30, 1, emotionNumScale(left), 1, false, "yellow", 0.3, 1, 200, 1);
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            emotionDragBox.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof emotionDragBox.releaseCapture !== 'undefined') {
+                emotionDragBox.releaseCapture()
+            }
+        }
+
+    }
+</script>
+
+
+<script>
+    //给滑动文本添加屏幕高度的margin
+    var windowHei = window.innerHeight;
+    $("#seedIntro1").css("margin-top", windowHei * 0.7);
+    $("#seedIntro2").css("margin-top", windowHei * 0.4);
+    $("#seedIntro3").css("margin-top", windowHei * 0.38);
+    // $("#seedIntro4").css("margin-top", windowHei * 0.5);
+    $("#windIntro1").css("margin-top", windowHei * 0.48);
+    $("#windIntro2").css("margin-top", windowHei * 0.44);
+    // $("#windIntro3").css("margin-top", windowHei * 0.3);
+    $("#windIntro4").css("margin-top", windowHei * 0.7);
+</script>
+
+<!--绘制Samara Seed Intro-->
+<script>
+    var windowHei = window.innerHeight;
+    var windowWid = window.innerWidth;
+    var svgWid = 400 / 1728 * windowWid //svgHeight就是windowHei
+    var centerX = 220 / 400 * svgWid; //种子在画布上中心点的位置
+    var centerY = windowHei / 2.5;
+    var scaleId = 1 / 400 * svgWid;
+
+    //绘制椭圆形的比例参数
+    var baseradius = 3;
+    var radiusX = 5 * baseradius;
+    var radiusY = 3.2 * baseradius;
+
+    var samaraSeedSvg = d3.select("#samaraIntro")
+        .append("svg")
+        .attr("width", svgWid * 2)
+        .attr("height", windowHei) // 自适应高宽
+        .attr("id", "mainSvg")
+        .style("float", "right")
+    // .style("margin-right", "40%") // 相对于column的宽度比例
+
+    var samaraSeedGroup = samaraSeedSvg.append("g")
+        .attr("id", "samaraSeedGroupIntro")
+        .attr("transform", "translate(" + centerX + ", " + centerY + "), scale(" + scaleId + ")")
+        .attr("opacity", "0");
+
+    var windcenterX = 70 / 400 * svgWid; //种子在画布上中心点的位置
+    var windcenterY = windowHei / 2.7;
+    var windscaleId = svgWid * 1.5 * 1728 / 400 * 1 / windowWid
+
+    var windCurve1 = samaraSeedSvg.append("g")
+        .attr("transform", "translate(" + windcenterX + ", " + windcenterY + "), scale(" + windscaleId + ")")
+        .attr("stroke", "#FFCA36")
+        .attr("stroke-width", "2")
+        .attr("stroke-dasharray", "1000")
+        .attr("stroke-dashoffset", "-1000")
+        .attr("stroke-linecap", "round")
+        .attr("opacity", "0.6")
+        .attr("fill", "none");
+
+    windCurve1.append("path")
+        .attr("d", "M.1,4.82C168.21-12.49,216.21,32.53,112,69.17s-115.58-1-45.58-12.53c64.8-10.73,124.52,26.89-4.4,62.12")
+
+
+    samaraSeedGroup.append("path")
+        .attr("d", "M36.32,79.91c-7.55,8.86-20.08,19.16-26.39,25.88C2.1,114.11-4.35,123.4,3.71,128.56s21.2,6.75,29.65-3.37c15.39-18.45,7.59-42.64,16.76-56S98.8-2.4,138.39,1.8c-10.6-5.51-34.64,1.31-57.92,24.88C60.43,47,51.64,62,36.32,79.91Z")
+        .attr("stroke", "none")
+        .attr("fill", "#FFCA36");
+
+    samaraSeedGroup.append("path")
+        .attr("d", "M46.55,70.15c7-8.87,25.45-9.81,34.68-4a17.31,17.31,0,0,1,4,3.42c-8.68-8.45-30.33-8-38.73.59Z")
+        .attr("stroke", "none")
+        .attr("fill", "#FFCA36");
+
+    samaraSeedGroup.append("path")
+        .attr("d", "M61.08,51.4C64,47.83,68.57,46.08,73,45.05c11.08-2.32,23.46-.71,32.83,5.89a24.15,24.15,0,0,1,4.88,4.75,26.41,26.41,0,0,0-5.16-4.35c-11-7.44-34.25-9.54-44.42.06Z")
+        .attr("stroke", "none")
+        .attr("fill", "#FFCA36");
+
+    samaraSeedGroup.append("path")
+        .attr("d", "M76.88,32.76c10.68-10.94,36.77-7.23,46.64,3.45a27,27,0,0,0-5.13-3.58c-11.16-6.09-31.19-8.61-41.51.13Z")
+        .attr("stroke", "none")
+        .attr("fill", "#FFCA36");
+
+    samaraSeedGroup.append("path")
+        .attr("d", "M94.73,16.27c8.94-7.66,25.41-9.23,35.37-2.76.68.48,1.3,1,1.94,1.56a23.33,23.33,0,0,0-4.31-2.4c-10.3-4-23.79-2.51-33,3.6Z")
+        .attr("stroke", "none")
+        .attr("fill", "#FFCA36");
+
+    samaraSeedGroup.append("path")
+        .attr("d", "M138.39,1.8c13,2.88,9.93,41.93-16.56,65.12C97.27,88.42,61,85.31,35.3,113.75l10.41-40.6S94.93-7.83,138.39,1.8Z")
+        .attr("stroke", "none")
+        .attr("fill", "#FFCA36")
+        .attr("opacity", "0.2");
+
+    samaraSeedGroup.append("circle")
+        .attr("cx", -12)
+        .attr("cy", 102)
+        .attr("r", 10)
+        .attr("fill", "#FFCA36")
+        .attr("opacity", "0.5")
+
+    samaraSeedGroup.append("circle")
+        .attr("cx", 8)
+        .attr("cy", 80)
+        .attr("r", 10)
+        .attr("fill", "#FFCA36")
+        .attr("opacity", "0.3")
+
+    //第一个出现的种子tooltip
+    {
+        var seedTp1 = samaraSeedSvg.append("g")
+            .attr("opacity", 0)
+            .attr("id", "seedTp1");
+
+        var seedTp1_txt = seedTp1.append("g")
+            .attr("id", "seedTp1_txt")
+            .attr("transform", `translate(0,${525 / 886 * window.innerHeight}), scale(0.16)`)
+
+        d3.xml("asset/svg/size_of_head.svg")
+            .then(data => {
+                d3.select("#seedTp1_txt").node().append(data.documentElement)
+            });
+
+        var seedTp1_arr = seedTp1.append("g")
+            .attr("id", "seedTp1_arr")
+            .attr("transform", `translate(${145 / 1728 * window.innerWidth},${525 / 886 * window.innerHeight}), scale(0.098)`)
+
+        d3.xml("asset/svg/arr_1.svg")
+            .then(data => {
+                d3.select("#seedTp1_arr").node().append(data.documentElement)
+            });
+    }
+
+    //第二个出现的种子tooltip
+    {
+        var seedTp2 = samaraSeedSvg.append("g")
+            .attr("opacity", 0)
+            .attr("id", "seedTp2");
+
+        var seedTp2_txt = seedTp2.append("g")
+            .attr("id", "seedTp2_txt")
+            .attr("transform", `translate(${280 / 1728 * window.innerWidth},${560 / 886 * window.innerHeight}), scale(0.19)`)
+
+        d3.xml("asset/svg/color_of_head.svg")
+            .then(data => {
+                d3.select("#seedTp2_txt").node().append(data.documentElement)
+            });
+
+        var seedTp2_arr = seedTp2.append("g")
+            .attr("id", "seedTp2_arr")
+            .attr("transform", `translate(${250 / 1728 * window.innerWidth},${525 / 886 * window.innerHeight}), scale(0.098)`)
+
+        d3.xml("asset/svg/arr_2.svg")
+            .then(data => {
+                d3.select("#seedTp2_arr").node().append(data.documentElement)
+            });
+    }
+
+    //第三个出现的种子tooltip
+    {
+        var seedTp3 = samaraSeedSvg.append("g")
+            .attr("opacity", 0)
+            .attr("id", "seedTp3");
+
+        var seedTp3_txt = seedTp3.append("g")
+            .attr("id", "seedTp3_txt")
+            .attr("transform", `translate(${380 / 1728 * window.innerWidth},${416 / 886 * window.innerHeight}), scale(0.16)`)
+
+        d3.xml("asset/svg/width_of_wing.svg")
+            .then(data => {
+                d3.select("#seedTp3_txt").node().append(data.documentElement)
+            });
+
+        var seedTp3_arr = seedTp3.append("g")
+            .attr("id", "seedTp3_arr")
+            .attr("transform", `translate(${300 / 1728 * window.innerWidth},${405 / 886 * window.innerHeight}), scale(0.08), rotate(10)`)
+
+        d3.xml("asset/svg/arr_3.svg")
+            .then(data => {
+                d3.select("#seedTp3_arr").node().append(data.documentElement)
+            });
+    }
+
+    //第四个出现的种子tooltip
+    {
+        var seedTp4 = samaraSeedSvg.append("g")
+            .attr("opacity", 0)
+            .attr("id", "seedTp4");
+
+        var seedTp4_txt = seedTp4.append("g")
+            .attr("id", "seedTp4_txt")
+            .attr("transform", `translate(${410 / 1728 * window.innerWidth},${270 / 886 * window.innerHeight}), scale(0.18)`)
+
+        d3.xml("asset/svg/pattern_on_wing.svg")
+            .then(data => {
+                d3.select("#seedTp4_txt").node().append(data.documentElement)
+            });
+
+        var seedTp4_arr = seedTp4.append("g")
+            .attr("id", "seedTp4_arr")
+            .attr("transform", `translate(${350 / 1728 * window.innerWidth},${350 / 886 * window.innerHeight}), scale(0.08), rotate(0)`)
+
+        d3.xml("asset/svg/arr_4.svg")
+            .then(data => {
+                d3.select("#seedTp4_arr").node().append(data.documentElement)
+            });
+    }
+
+    //第五个出现的种子tooltip
+    {
+        var seedTp5 = samaraSeedSvg.append("g")
+            .attr("opacity", 0)
+            .attr("id", "seedTp5");
+
+        var seedTp5_txt = seedTp5.append("g")
+            .attr("id", "seedTp5_txt")
+            .attr("transform", `translate(${130 / 1728 * window.innerWidth},${290 / 886 * window.innerHeight}), scale(0.18)`)
+
+        d3.xml("asset/svg/length_of_stem.svg")
+            .then(data => {
+                d3.select("#seedTp5_txt").node().append(data.documentElement)
+            });
+
+        var seedTp5_arr = seedTp5.append("g")
+            .attr("id", "seedTp5_arr")
+            .attr("transform", `translate(${250 / 1728 * window.innerWidth},${370 / 886 * window.innerHeight}), scale(0.09), rotate(0)`)
+
+        d3.xml("asset/svg/arr_5.svg")
+            .then(data => {
+                d3.select("#seedTp5_arr").node().append(data.documentElement)
+            });
+    }
+
+    //第六个出现的种子tooltip
+    {
+        var seedTp6 = samaraSeedSvg.append("g")
+            .attr("opacity", 0)
+            .attr("id", "seedTp6");
+
+        var seedTp6_txt = seedTp6.append("g")
+            .attr("id", "seedTp6_txt")
+            .attr("transform", `translate(${10 / 1728 * window.innerWidth},${400 / 886 * window.innerHeight}), scale(0.16)`)
+
+        d3.xml("asset/svg/type_of_dots.svg")
+            .then(data => {
+                d3.select("#seedTp6_txt").node().append(data.documentElement)
+            });
+
+        var seedTp6_arr = seedTp6.append("g")
+            .attr("id", "seedTp6_arr")
+            .attr("transform", `translate(${150 / 1728 * window.innerWidth},${440 / 886 * window.innerHeight}), scale(0.063), rotate(0)`)
+
+        d3.xml("asset/svg/arr_6.svg")
+            .then(data => {
+                d3.select("#seedTp6_arr").node().append(data.documentElement)
+            });
+    }
+
+
+</script>
+
+<!--scroll magic 动画-->
+<script>
+    var controller = new ScrollMagic.Controller();
+    var windowHei = window.innerHeight;
+
+    //text渐变出入设置的时间轴动画关键帧
+    var tweenIntroTxt1 = new TimelineMax().to("#seedIntro1", 2, {opacity: 1}).to("#seedIntro1", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+    var tweenIntroTxt2 = new TimelineMax().to("#seedIntro2", 1, {opacity: 1}); // 显示和隐藏是3：1的关系
+    var tweenIntroTxt2_1 = new TimelineMax().to("#seedIntro2", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+    var tweenIntroTxt3 = new TimelineMax().to("#seedIntro3", 2, {opacity: 1}).to("#seedIntro3", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+    // var tweenIntroTxt4 = new TimelineMax().to("#seedIntro4", 2, {opacity: 1}).to("#seedIntro4", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+    var tweenIntroTxt5 = new TimelineMax().to("#windIntro1", 2, {opacity: 1}).to("#windIntro1", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+    var tweenIntroTxt6 = new TimelineMax().to("#windIntro2", 2, {opacity: 1}).to("#windIntro2", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+    // var tweenIntroTxt7 = new TimelineMax().to("#windIntro3", 2, {opacity: 1}).to("#windIntro3", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+    var tweenIntroTxt8 = new TimelineMax().to("#windIntro4", 2, {opacity: 1}).to("#windIntro4", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+    // var tweenIntroTpIcon = new TimelineMax().to("#showTooltipOverlayImgIntro", 0.5, {opacity: 1}).to("#showTooltipOverlayImgIntro", 1, {opacity: 1}).to("#showTooltipOverlayImgIntro", 0.5, {opacity: 0}); // 显示和隐藏是3：1的关系
+
+    // $(function () { // wait for document ready
+    //svg seed加载动画触发
+    var windAnim = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: 3 / 8 * windowHei, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: 1 / 8 * windowHei
+    })
+        .on("progress", function (event) {
+            var windowHei = window.innerHeight;
+            var windowWid = window.innerWidth;
+            var svgWid = 400 / 1728 * windowWid //svgHeight就是windowHei
+            var windcenterX = 70 / 400 * svgWid; //种子在画布上中心点的位置
+            var windcenterY = windowHei / 4;
+            var windscaleId = svgWid * 1.5 * 1728 / 400 * 1 / windowWid
+
+            windCurve1.attr("stroke-dashoffset", 1000 - event.progress * 1800)
+                .attr("transform", "translate(" + windcenterX + ", " + (windcenterY + event.progress / 10 * windowHei) + "), scale(" + windscaleId + ")")
+        }) //可以使用progress添加d3的动画
+        // .addIndicators({name: "x (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+
+    // svg页面相对固定触发
+    var svgStayedScene = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: 25 / 4 * windowHei, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: windowHei / 2
+    })
+        .setPin("#samaraIntro")  // 种子相对页面静止不动
+        // .addIndicators({name: "1 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    // 种子入场动画
+    var seedIntoScene = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: 2.5 / 4 * windowHei, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: windowHei / 2
+    })
+        .on("progress", function (event) {
+            var windowHei = window.innerHeight;
+            var windowWid = window.innerWidth;
+            var svgWid = 400 / 1728 * windowWid //svgHeight就是windowHei 1728是目前屏幕宽度大小
+            var centerX = 220 / 400 * svgWid; //种子在画布上中心点的位置
+            var centerY = windowHei / 2.5;
+            var scaleId = 1 / 400 * svgWid;
+
+            samaraSeedGroup
+                .attr("opacity", (event.progress))
+                .attr("transform", "translate(" + centerX + ", " + (centerY + event.progress * 0.1 / 2 * windowHei) + "), scale(" + (scaleId / 2 + event.progress * scaleId / 2) + "," + scaleId + ")")
+        }) //可以使用progress添加d3的动画
+        .addTo(controller);
+
+
+    var seed_Tp1_Timeline = new TimelineMax().to("#seedTp1", 1, {opacity: 1}).to("#seedTp1", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+
+    //size_of_head tooltip 头部大小图例注释
+    var seed_Tp1_scene = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 3 / 8, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: windowHei * 10 / 8
+    })
+        .setTween(seed_Tp1_Timeline)
+        // .addIndicators({name: "1 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    //color_of_head tooltip 头部颜色图例注释
+    var seed_Tp2_Timeline = new TimelineMax().to("#seedTp2", 1, {opacity: 1}).to("#seedTp2", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+
+    var seed_Tp2_scene = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 3 / 8, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: windowHei * 11 / 8
+    })
+        .setTween(seed_Tp2_Timeline)
+        // .addIndicators({name: "1 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    //width of wing tooltip 叶子宽度注释
+    var seed_Tp3_Timeline = new TimelineMax().to("#seedTp3", 1, {opacity: 1}).to("#seedTp3", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+
+    var seed_Tp3_scene = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 3 / 8, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: windowHei * 12 / 8
+    })
+        .setTween(seed_Tp3_Timeline)
+        // .addIndicators({name: "1 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    //pattern on wing tooltip 叶子纹理注释
+    var seed_Tp4_Timeline = new TimelineMax().to("#seedTp4", 1, {opacity: 1}).to("#seedTp4", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+
+    var seed_Tp4_scene = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 3 / 8, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: windowHei * 13 / 8
+    })
+        .setTween(seed_Tp4_Timeline)
+        // .addIndicators({name: "1 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    //length of stem tooltip 叶子长度注释
+    var seed_Tp5_Timeline = new TimelineMax().to("#seedTp5", 1, {opacity: 1}).to("#seedTp5", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+
+    var seed_Tp5_scene = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 3 / 8, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: windowHei * 14 / 8
+    })
+        .setTween(seed_Tp5_Timeline)
+        // .addIndicators({name: "1 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    //type of dots tooltip 叶子点点注释
+    var seed_Tp6_Timeline = new TimelineMax().to("#seedTp6", 1, {opacity: 1}).to("#seedTp6", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+
+    var seed_Tp5_scene = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 3 / 8, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+        offset: windowHei * 15 / 8
+    })
+        .setTween(seed_Tp6_Timeline)
+        // .addIndicators({name: "1 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    //判断当前页面位置
+    var curPagePos = "Intro";
+    var isEnterWindVideoPlayed = false;
+
+    //判断Intro部分和wind部分倒退问题
+    //两个文档的onscroll需要合并一下
+    window.onscroll = function () {
+        let topdis = document.documentElement.scrollTop || document.body.scrollTop;
+        // console.log(topdis)
+
+        // //稳定状态风glyph距离顶部的距离
+        // let winddis_max = 4000 / 886 * window.innerHeight
+        // let winddis_min = 3875 / 886 * window.innerHeight
+        //
+        // if(curPagePos == "wind" && (topdis >= winddis_min) && (topdis <= winddis_max))
+        // {
+        //     let opacityScale = d3.scaleLinear()
+        //         .domain([0, winddis_max - winddis_min])
+        //         .range([0, 1])
+        //
+        //     //风的glyph渐变退场
+        //     d3.select("#windsvg_overlay")
+        //         .style("opacity", opacityScale(topdis - winddis_min));
+        //
+        // }
+
+        let seeddis_max = 3870 / 886 * window.innerHeight
+        let seeddis_min = 3800 / 886 * window.innerHeight
+
+        // if(curPagePos == "Intro" && !isEnterWindVideoPlayed && (topdis >= seeddis_min) && (topdis <= seeddis_max))
+        // {
+        //     let opacityScale = d3.scaleLinear()
+        //         .domain([0, seeddis_max - seeddis_min])
+        //         .range([1, 0])
+        //
+        //     //seed的glyph渐变进场
+        //     samaraSeedGroup
+        //         .style("opacity", opacityScale(topdis - seeddis_min));
+        //
+        //     var windowHei = window.innerHeight;
+        //     var windowWid = window.innerWidth;
+        //     var svgWid = 400 / 1728 * windowWid //svgHeight就是windowHei
+        //     var centerX = 150 / 400 * svgWid; //种子在画布上中心点的位置
+        //     var centerY = windowHei / 2.5;
+        //     var scaleId = 1 / 400 * svgWid;
+        //     samaraSeedGroup
+        //         .attr("transform", "translate(" + (centerX * 3) + ", " + centerY + "), scale(" + (scaleId / 1.5) + "," + scaleId + ")")
+        // }
+
+        // if(curPagePos == "wind" && (topdis < winddis_min - 30))
+        // {
+        //     curPagePos = "Intro"
+        //
+        //     //wind删除
+        //     d3.select("#windsvg_overlay")
+        //         .remove();
+        // }
+        // if(curPagePos == "Intro" && (topdis < 19/4 * window.innerHeight) && (topdis > 18.5/4 * window.innerHeight))
+        // {
+        //     let seedOpacityScale = d3.scaleLinear()
+        //         .domain([0, 1/8 * window.innerHeight])
+        //         .range([0, 1])
+        //
+        //
+        //     samaraSeedGroup
+        //         .attr("transform", "translate(" + (centerX) + ", " + centerY + "), scale(" + (scaleId) + "," + scaleId + ")")
+        //
+        //     samaraSeedGroup
+        //         .attr("opacity", seedOpacityScale(topdis - 13.5/4 * window.innerHeight)); //动画终点对象的attr属性
+        //
+        // }
+    }
+
+
+    var videoEnter = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: 10 / 4 * windowHei,
+        offset: windowHei * 2.6 / 4
+    })
+        .on("end", function (event) { // 移到seed的最后部分，出现视频
+            console.log("end!");
+
+            //介绍文字渐变进入
+            d3.select("#windIntro1Div")
+                .transition()
+                .duration(4000)
+                .style("opacity", 1);
+
+            //设置进场视频只播放一次
+            if (curPagePos == "Intro" && !isEnterWindVideoPlayed) {
+                isEnterWindVideoPlayed = true;
+                curPagePos = "wind";
+
+                //禁止页面滑动
+                var mo = function (e) {
+                    passive: false;
+                };
+                document.body.style.overflow = 'hidden';
+                document.addEventListener("touchmove", mo, false);
+
+                //显示视频的div
+                $("#windvideoEnter").css("display", "block");
+                //调整div大小：全屏
+                let windowHei = window.innerHeight;
+                let windowWid = window.innerWidth;
+                $("#windvideoEnter").css("height", windowHei);
+                $("#windvideoEnter").css("width", windowWid);
+                //设置视频自动播放
+                // $("#videoclipEnter").attr("autoplay", "true")
+                // $("#videoclipEnter").attr("muted", "muted")
+                Media = document.getElementById("videoclipEnter");
+                Media.currentTime = 0;
+                Media.play();
+
+
+                let svgWid = 400 / 1728 * windowWid //svgHeight就是windowHei
+                let centerX = 220 / 400 * svgWid; //种子在画布上中心点的位置
+                let centerY = windowHei / 2.5 + 0.1 / 2 * windowHei;
+                let scaleId = 1 / 400 * svgWid;
+
+                //seedHead3.svg svg退场
+                samaraSeedGroup.transition() //transition表示动画
+                    .duration(3000) //动画持续时间
+                    // .delay(function(d, i) { return i * 1000; }) //延迟几秒再开始动画
+                    .attr("transform", "translate(" + (centerX * 3) + ", " + centerY + "), scale(" + (scaleId / 1.5) + "," + scaleId + ")")
+                    .attr("opacity", "0"); //动画终点对象的attr属性
+
+                //页面往下滚动
+                window.scrollTo({
+                    top: 4100 / 886 * window.innerHeight, //初始稳定状态风glyph距离顶部的距离
+                    behavior: "instant"
+                });
+
+                console.log(`topdis ${document.documentElement.scrollTop || document.body.scrollTop}`)
+
+            }
+
+
+        })
+        // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+
+
+    // var videoExit = new ScrollMagic.Scene({
+    //     triggerElement: "#trigger1",
+    //     duration: 25 / 4 * windowHei, //设置的比videoEnter更下面，保证视频出现的时候种子相对屏幕还是固定的，让种子的位置是唯一确定的，不会乱动
+    //     offset: windowHei / 2
+    // })
+    //
+    //     .addTo(controller);
+
+    var sceneIntroTxt1 = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 2.5 / 4,
+        offset: windowHei * 2 / 4
+    })
+        .setTween(tweenIntroTxt1)
+        // .addIndicators({name: "2 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    var sceneIntroTxt2 = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 2 / 3,
+        offset: windowHei * 4 / 4
+    })
+        .setTween(tweenIntroTxt2)
+        // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    var sceneIntroTxt2_stay = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 7.5 / 8,
+        offset: windowHei * 2 / 3 + windowHei * 2.5 / 4
+    })
+        .setPin("#seedIntro2")
+        // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    var sceneIntroTxt2_fade = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 1 / 3,
+        offset: windowHei * 2 / 3 + windowHei * 2.5 / 4 + windowHei * 7.5 / 8
+    })
+        .setTween(tweenIntroTxt2_1)
+        // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    //Tooltip Icon出现
+    // var sceneIntroTpIcon = new ScrollMagic.Scene({
+    //     triggerElement: "#trigger1",
+    //     duration: windowHei * 5.5 / 4,
+    //     offset: windowHei
+    // })
+    //     .setTween(tweenIntroTpIcon)
+    //     // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+    //     .addTo(controller);
+
+    var sceneIntroTxt3 = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 2.5 / 4,
+        offset: windowHei * 10.2 / 4
+    })
+        .setTween(tweenIntroTxt3)
+        // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    // var sceneIntroTxt4 = new ScrollMagic.Scene({
+    //     triggerElement: "#trigger1",
+    //     duration: windowHei * 2.5 / 4,
+    //     offset: windowHei * 11 / 4
+    // })
+    //     .setTween(tweenIntroTxt4)
+    //     // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+    //     .addTo(controller);
+
+    var sceneIntroTxt5 = new ScrollMagic.Scene({
+        triggerElement: "#trigger0",
+        duration: windowHei * 2.5 / 4,
+        offset: 4000 / 886 * windowHei
+    })
+        .setTween(tweenIntroTxt5)
+        .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    var isExitWindVideoPlayed = false;
+
+    var sceneIntroTxt6 = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei * 2.5 / 4,
+        offset: windowHei * 29.5 / 8
+    })
+        .setTween(tweenIntroTxt6)
+        .on("end", function (event) { // 移到seed的最后部分，出现视频
+            console.log("end!");
+
+            if (curPagePos == "wind" && !isExitWindVideoPlayed) {
+                isExitWindVideoPlayed = true;
+                curPagePos = "main"
+
+                //隐藏原来风的svg
+                d3.select("#windsvg_overlay")
+                    .style("opacity", "0");
+
+                //禁止页面滑动
+                var mo = function (e) {
+                    passive: false;
+                };
+                document.body.style.overflow = 'hidden';
+                document.addEventListener("touchmove", mo, false);
+
+                //显示视频的div
+                $("#windvideoExit").css("display", "block");
+                //调整div大小：全屏
+                var windowHei = window.innerHeight;
+                var windowWid = window.innerWidth;
+                $("#windvideoExit").css("height", windowHei);
+                $("#windvideoExit").css("width", windowWid);
+
+
+                //屏幕自动下移
+                window.scroll(0, document.getElementById("samaraTimeline").offsetTop);  // 数值是相对屏幕的绝对位置; offsetTop获取元素距离顶部距离
+
+                //设置视频自动播放
+                // $("#videoclipEnter").attr("autoplay", "true")
+                // $("#videoclipEnter").attr("muted", "muted")
+                Media = document.getElementById("videoclipExit");
+                Media.currentTime = 0;
+                Media.play();
+            }
+        })
+        .addIndicators({name: "yy (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    // var sceneIntroTxt7 = new ScrollMagic.Scene({
+    //     triggerElement: "#trigger1",
+    //     duration: windowHei * 2.5 / 4,
+    //     offset: windowHei * 17.5 / 4
+    // })
+    //     .setTween(tweenIntroTxt7)
+    //     // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+    //     .addTo(controller);
+
+    var sceneIntroTxt8 = new ScrollMagic.Scene({
+        triggerElement: "#trigger1",
+        duration: windowHei,
+        offset: windowHei * 21 / 4
+    })
+        .setTween(tweenIntroTxt8)
+        // .addIndicators({name: "3 (duration: windowHei)"}) // add indicators (requires plugin)
+        .addTo(controller);
+
+    // });
+</script>
+
+<!--监听视频播放是否结束-->
+<script>
+    var windvideoIntro = document.getElementById("videoclipEnter");
+    windvideoIntro.addEventListener('ended', function () { //结束
+        // console.log("播放结束");
+
+        var windowHei = window.innerHeight;
+
+        var translateX = windowHei / 886 * 4;
+        var translateY = windowHei / 886 * 72;
+        var scaleId = windowHei / 886 * 0.79;
+        //加载覆盖的svg
+        overlaywindgroup = d3.select("#mainSvg")
+            .append("g")
+            .attr("id", "windsvg_overlay")
+            .attr("transform", "translate(" + translateX + ", " + translateY + ") scale(" + scaleId + ")");
+
+        d3.xml("asset/svg/wind3.svg")
+            .then(data => {
+                d3.select("#windsvg_overlay").node().append(data.documentElement);
+
+                d3.select("#mainSvg")
+                    .append("rect")
+                    .attr("id", "blockWindRect")
+                    .attr("x", 0)
+                    .attr("y", 270)
+                    .attr("width", 500)
+                    .attr("height", 350)
+                    .attr("opacity", "0")
+                    .attr("fill", `url(#blockWindGradRect)`)
+
+                let blockWindGrad = d3.select("#mainSvg")
+                    .append("defs")
+                    .append("linearGradient")
+                    .attr("id", `blockWindGradRect`)
+                    .attr("gradientUnits", "userSpaceOnUse")
+                    .attr("x1", "0")
+                    .attr("y1", "270")
+                    .attr("x2", `500`)
+                    .attr("y2", "270");
+
+                let stop1 = blockWindGrad.append("stop")
+                    .attr("id", "blockWindGradRect_start")
+                    .attr("offset", "0")
+                    .style("stop-color", "#FFF9F0");
+
+                let stop2 = blockWindGrad.append("stop")
+                    .attr("id", "blockWindGradRect_end")
+                    .attr("offset", "1")
+                    .style("stop-color", "#FFF9F0")
+                    .style("stop-opacity", "0");
+
+                // var windGlyphScene1 = new TimelineMax().to("#windsvg_overlay", 1, {opacity: 1}); // 显示和隐藏是3：1的关系
+
+                //添加风的渐变进出
+                var windGlyphScene = new ScrollMagic.Scene({
+                    triggerElement: "#trigger0",
+                    duration: 125 / 886 * window.innerHeight,
+                    offset: 3900 / 886 * window.innerHeight
+                })
+                    .on("progress", function (event) {
+
+                        d3.select("#windsvg_overlay")
+                            .style("opacity", event.progress)
+
+                        let windOffsetScale = d3.scaleLinear()
+                            .domain([0, 1])
+                            .range([-100, 0]);
+
+                        let translateX = windowHei / 886 * 4;
+                        let translateY = windowHei / 886 * 72;
+                        let scaleId = windowHei / 886 * 0.79;
+                        d3.select("#windsvg_overlay")
+                            .attr("transform", `translate(${translateX + windOffsetScale(event.progress)}, ${translateY}) scale(${scaleId})`);
+
+                    })
+
+                    // .addIndicators({name: "wind"}) // add indicators (requires plugin)
+                    .addTo(controller);
+
+
+                //添加遮挡风的矩形的渐变进出
+                // var tweenRectBlk = new TimelineMax().to("#blockWindRect", 5, {opacity: 1}).to("#blockWindRect", 1, {opacity: 0}); // 显示和隐藏是3：1的关系
+                var blockWindRectScene = new ScrollMagic.Scene({
+                    triggerElement: "#trigger0",
+                    duration: 175 / 886 * window.innerHeight, //duration与offset 是风的渐变的范围设置，前后各加25
+                    offset: 3875 / 886 * window.innerHeight
+                })
+                    .on("start", function(){
+                        //将遮挡矩形透明度调为0
+                        d3.select("#blockWindRect")
+                            .attr("opacity", 0);
+                    })
+                    .on("progress", function (event){
+                        if(event.progress < 25 / 175)
+                        {
+                            d3.select("#blockWindRect")
+                                .attr("opacity", 1 - (25 / 175 - event.progress) / (25 / 175));
+
+                        }
+                        if(event.progress >= 25 / 175 && event.progress <= 150 / 175)
+                        {
+                            d3.select("#blockWindRect")
+                                .attr("opacity", 1);
+
+                        }
+                        if(event.progress > 150 / 175)
+                        {
+                            d3.select("#blockWindRect")
+                                .attr("opacity", 1 - (event.progress - 150 / 175) / (25 / 175));
+
+                        }
+                    })
+                    // .addIndicators({name: "blk"}) // add indicators (requires plugin)
+                    .addTo(controller);
+
+
+                //添加遮挡风的矩形的隐藏与显示
+                var blockWindRectHidShowScene = new ScrollMagic.Scene({
+                    triggerElement: "#trigger0",
+                    duration: 10 / 886 * window.innerHeight, //duration与offset 是风的渐变的范围设置，前后各加25
+                    offset: (3875 + 175) / 886 * window.innerHeight
+                })
+                    .on("start", function (){
+                        d3.select("#blockWindRect")
+                            .style("display", "block")
+                    })
+                    .on("end", function (){
+                        d3.select("#blockWindRect")
+                            .style("display", "none")
+                    })
+                    .addTo(controller);
+
+
+                //添加seed的渐变进出
+                var seedGlyphScene = new ScrollMagic.Scene({
+                    triggerElement: "#trigger1",
+                    duration: 0.8 / 4 * window.innerHeight,
+                    offset: 11.5 / 4 * window.innerHeight
+                })
+                    .on("progress", function (event) {
+                        console.log(`progress${event.progress}`)
+                        samaraSeedGroup
+                            .attr("opacity", 1 - event.progress)
+
+                        let windowHei = window.innerHeight;
+                        let windowWid = window.innerWidth;
+                        let svgWid = 400 / 1728 * windowWid //svgHeight就是windowHei
+                        let centerX = 220 / 400 * svgWid; //种子在画布上中心点的位置
+                        let centerY = windowHei / 2.5 + 0.1 / 2 * windowHei;
+                        let scaleId = 1 / 400 * svgWid;
+                        let centerxScale = d3.scaleLinear()
+                            .domain([0, 1])
+                            .range([centerX, centerX * 2])
+                        let scaleIdScale = d3.scaleLinear()
+                            .domain([0, 1])
+                            .range([scaleId, scaleId / 1.5])
+
+                        samaraSeedGroup
+                            .attr("transform", "translate(" + (centerxScale(event.progress)) + ", " + centerY + "), scale(" + (scaleIdScale(event.progress)) + "," + scaleId + ")")
+                    })
+                    // .addIndicators({name: "x (duration: windowHei)"}) // add indicators (requires plugin)
+                    .addTo(controller);
+
+
+                //给每一缕风绑定tooltip
+
+                for (let index = 1; index <= 8; index++) {
+                    d3.select(`#windCat${index}`)
+                        .on("mouseover", function (d, i) {
+                            d3.select("#hashtagTooltip_wind")
+                                .style("display", "block")
+                                .style("top", `${d3.pointer(d)[1]}px`)
+                                .style("left", `${d3.pointer(d)[0]}px`)
+
+                            //更改名称：Hashtag Group · X
+                            d3.select("#hashtagGroupNum_wind")
+                                .html(`Hashtag Group · ${index}`);
+
+                            //改变简介内容
+                            d3.select("#hashtagGroupSubtitle_wind")
+                                .html(hashtagNodes[index - 1]["event"])
+
+
+                            //改变view数量
+                            d3.select("#windView")
+                                .html(transNum(hashtagNodes[index - 1]["view"]))
+
+                            //改变discussion数量
+                            d3.select("#windComment")
+                                .html(transNum(hashtagNodes[index - 1]["discussion"]))
+
+                            //改变original数量
+                            d3.select("#windOriginal")
+                                .html(transNum(hashtagNodes[index - 1]["original"]))
+
+
+                            //改变hashtag内容
+                            d3.select("#hashtagGroupInclude_wind")
+                                .html(function () {
+                                    let res = "";
+                                    for (let j = 0; j < 4; j++) {
+                                        res += hashtagNodes[index - 1]["hashtags"][j]
+                                        res += "<br>"
+                                    }
+                                    return res;
+                                })
+                                .attr("content", function () {
+                                    let res = "";
+                                    for (let j = 0; j < hashtagNodes[index - 1]["hashtags"].length; j++) {
+                                        res += hashtagNodes[index - 1]["hashtags"][j]
+                                        res += "<br>"
+                                    }
+                                    return res;
+                                })
+
+                            //改变emotion scaleBox位置
+                            let emoScale = d3.scaleLinear()
+                                .domain([1, 0])
+                                .range([0, 175]);
+
+                            d3.select("#emotionScaleBox_wind")
+                                .style("left", `${emoScale(parseFloat(hashtagNodes[index - 1]["sentiment"]))}px`)
+
+                        })
+
+                        .on("mousemove", function (d, i) {
+                            let posScaleWid = d3.scaleLinear()
+                                .domain([0, window.innerWidth])
+                                .range([500 / 1726 * window.innerWidth, 1400 / 1726 * window.innerWidth]);
+
+                            let posScaleHei = d3.scaleLinear()
+                                .domain([0, window.innerHeight])
+                                .range([100 / 1726 * window.innerWidth, 500 / 1726 * window.innerWidth]);
+
+                            d3.select("#hashtagTooltip_wind")
+                                .style("top", `${posScaleHei(d3.pointer(d)[1])}px`)
+                                .style("left", `${posScaleWid(d3.pointer(d)[0])}px`)
+                        })
+
+                        .on("mouseleave", function () {
+                            if (!isTooltipFixed_wind) {
+                                d3.select("#hashtagTooltip_wind")
+                                    .style("display", "none")
+                            }
+
+                        })
+                        .on("click", function () {
+                            isTooltipFixed_wind = true;
+                            d3.select("#tooltipInvisibleBlockDiv_wind")
+                                .style("display", "block")
+                        });
+                }
+
+            });
+
+        //隐藏视频div
+        setTimeout("hidevideo()", "15"); //15ms 后执行隐藏video: 防止闪一下
+
+        window.scrollTo({
+            top: 4100 / 886 * window.innerHeight, //初始稳定状态风glyph距离顶部的距离
+            behavior: "instant"
+        });
+
+        //允许滚动
+        var mo = function (e) {
+            passive: false
+        };
+        document.body.style.overflow = '';//出现滚动条
+        document.removeEventListener("touchmove", mo, false);
+
+
+    }, false);
+
+    function hidevideo() {
+        document.getElementById("windvideoEnter").style.display = "none";
+    }
+
+    var windvideoIntro = document.getElementById("videoclipExit");
+    windvideoIntro.addEventListener('ended', function () {
+        //隐藏视频div
+        document.getElementById("windvideoExit").style.display = "none";
+
+        //出现动画
+        d3.select("#testcir")
+            .transition()
+            .duration(1000)
+            .attr("opacity", "100%");
+
+        //出现滑条
+        $("#streamGraphScroll").css("display", "block");
+        //滑条渐变出现
+        d3.select("#svgStreamScrollGroup")
+            .transition()
+            .duration(1000)
+            .attr("opacity", "100");
+
+        //允许滚动
+        var mo = function (e) {
+            passive: false
+        };
+        document.body.style.overflow = '';//出现滚动条
+        document.removeEventListener("touchmove", mo, false);
+    }, false);
+
+</script>
+
+
+<!--绘制主要时间线-->
+<script>
+    var windowHei = window.innerHeight;
+    var windowWid = window.innerWidth;
+    var timelineSvg = d3.select("#samaraTimeline")
+        .append("svg")
+        .attr("width", windowWid * 0.96)
+        .attr("height", windowHei * 4);
+    timelineSvg.append("circle")
+        .attr("cx", "500")
+        .attr("cy", "500")
+        .attr("r", "50")
+        .attr("opacity", "0")
+        .attr("id", "testcir")
+</script>
+
+<!--绘制滑条-->
+<script>
+    // set the dimensions and margins of the graph
+    const margin = {top: 20, right: 30, bottom: 0, left: 10},
+        width = 800 - margin.left - margin.right,
+        height = 100 - margin.top - margin.bottom;
+    var windowHei = window.innerHeight;
+    var windowWid = window.innerWidth;
+
+    const svgStreamScroll = d3.select("#streamGraphScroll")
+        .append("svg")
+        .attr("width", 100 / 1728 * windowWid)
+        .attr("height", windowHei)
+        .attr("id", "svgStreamScroll");
+
+    // append the svg object to the body of the page
+    const svgStreamScrollGroup = svgStreamScroll
+        .append("g")
+        .attr("opacity", "0")
+        .attr("id", "svgStreamScrollGroup")
+        .attr("transform",
+            `translate(0, ${windowHei * 0.02})`);  // ${} 取数字值 , 0.02使得竖直居中，因为总高度为0.96windowHei
+
+    scrollrect = svgStreamScrollGroup.append("rect")
+        .attr("x", "0")
+        .attr("y", "0")
+        .attr("width", 100 / 1728 * windowWid)
+        .attr("height", windowHei * 0.96)
+        .attr("rx", "20")
+        .attr("ry", "20")
+        .attr("fill", "#FAAC0F")
+        .attr("opacity", "0.1")
+        .attr("id", "scrollrectBackground");
+
+
+    // Parse the Data
+    d3.csv("asset/csv/阅读数.csv").then(function (data) {
+        console.log(data)
+        // List of groups = header of the csv files
+        const keys = data.columns.slice(1)//从第二个开始往后切片
+        console.log(keys)
+
+        // Add X axis, 纵向
+        const x = d3.scaleLinear()
+            .domain(d3.extent(data, function (d) {
+                return parseInt(d.time);
+            }))  // 返回data中的year属性，并求值域
+            .range([0, windowHei * 0.96]);
+
+
+        // Add Y axis， 横向宽度
+        const y = d3.scaleLinear()
+            .domain([0, 200000000])
+            .range([5, 0]); //映射范围
+
+        var colorrange = ["#FAAC0F", "#FBB323", "#FBBA37", "#FBC14B", "#FCC85F", "#FCCE73", "#FDD587", "#FDDC9B",];
+        // color palette
+        const color = d3.scaleOrdinal()
+            .domain(keys)
+            .range(colorrange); //d3.schemeDark2
+
+        //stack the data?
+        const stackedData = d3.stack()
+            .offset(d3.stackOffsetSilhouette)
+            .keys(keys) //这样用stack创造出的是函数！还要给他参数（data）
+            (data)
+
+        // create a tooltip
+        const Tooltip = svgStreamScrollGroup
+            .append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .style("opacity", 0)
+            .style("font-size", 17) //在0，0位置显示悬停的名称
+
+        // Three function that change the tooltip when user hover / move / leave a cell
+        const mouseover = function (event, d) {
+            Tooltip.style("opacity", 1)
+            d3.selectAll(".myArea").style("opacity", .2) //其他变半透明
+            d3.select(this)
+                //.style("stroke", "black")
+                .style("opacity", 1)
+            grp = d.key
+            Tooltip.text(grp)
+        }
+        const mousemove = function (event, d, i) {
+
+        }
+        const mouseleave = function (event, d) {
+            Tooltip.style("opacity", 0)
+            d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+        }
+
+        // Area generator
+        const area = d3.area()
+            .curve(d3.curveMonotoneY)  //.curve(d3.curveCatmullRom.alpha(0))
+            .y(function (d) {
+                return x(d.data.time);
+            })
+            .x0(function (d) {
+                return y(d[0]);
+            })
+            .x1(function (d) {
+                return y(d[1]);
+            })
+
+        // Show the areas
+        svgStreamScrollGroup
+            .selectAll("mylayers")
+            .data(stackedData)
+            .join("path")
+            .attr("class", "myArea")
+            .attr("transform", `translate(${44 / 1728 * windowWid}, 0)`)
+            .style("fill", function (d) {
+                return color(d.key);
+            })
+            .attr("d", area)
+            .on("mouseover", mouseover)
+            .on("mousemove", mousemove)
+            .on("mouseleave", mouseleave)
+
+    })
+</script>
+
+
+<!--更改窗口大小函数-->
+<script>
+    d3.select(window).on('resize', resize); // 现在是一次刷新"一次性"的自适应，如果需要实时自适应需要在resize函数里面添加对应的变化
+    function resize() {
+        //更改视频大小；视频的比例为 1920：1080
+        var windowHei = window.innerHeight;
+        var windowWid = window.innerWidth;
+        $("#windvideoEnter").attr("width", windowWid);
+        $("#windvideoEnter").attr("height", windowHei);
+        //根据窗口长宽比确定视频长宽比
+        if (windowWid / windowHei > 1920 / 1080) {
+            $("#videoclipEnter").attr("height", "100%");
+            $("#videoclipEnter").removeAttr("width");
+        } else {
+            $("#videoclipEnter").attr("width", "100%");
+            $("#videoclipEnter").removeAttr("height");
+        }
+
+        $("#windvideoExit").attr("width", windowWid);
+        $("#windvideoExit").attr("height", windowHei);
+        //根据窗口长宽比确定视频长宽比
+        if (windowWid / windowHei > 1920 / 1080) {
+            $("#videoclipExit").attr("height", "100%");
+            $("#videoclipExit").removeAttr("width");
+        } else {
+            $("#videoclipExit").attr("width", "100%");
+            $("#videoclipExit").removeAttr("height");
+        }
+
+
+        //这部分是调整滑条的响应
+        {
+            d3.select("#svgStreamScroll").attr("width", 100 / 1728 * window.innerWidth);  //改变svg宽度
+            d3.select("#streamGraphScroll").style("right", (20 / 1728 * window.innerWidth).toString() + "px");  //调整滑条和窗口右边的距离
+            d3.selectAll(".myArea").remove(); // 先把之前绘制的删除
+            d3.select("#scrollrectBackground")
+                .attr("width", 100 / 1728 * window.innerWidth)
+                .attr("height", window.innerHeight * 0.96);
+
+            d3.csv("asset/阅读数.csv").then(function (data) {
+                console.log(data)
+                // List of groups = header of the csv files
+                const keys = data.columns.slice(1)//从第二个开始往后切片
+                console.log(keys)
+
+                // Add X axis, 纵向
+                const x = d3.scaleLinear()
+                    .domain(d3.extent(data, function (d) {
+                        return parseInt(d.time);
+                    }))  // 返回data中的year属性，并求值域
+                    .range([0, window.innerHeight * 0.96]);
+
+
+                // Add Y axis， 横向宽度
+                const y = d3.scaleLinear()
+                    .domain([0, 200000000])
+                    .range([5 / 1728 * window.innerWidth, 0]); //映射范围
+
+                var colorrange = ["#FAAC0F", "#FBB323", "#FBBA37", "#FBC14B", "#FCC85F", "#FCCE73", "#FDD587", "#FDDC9B",];
+                // color palette
+                const color = d3.scaleOrdinal()
+                    .domain(keys)
+                    .range(colorrange); //d3.schemeDark2
+
+                //stack the data?
+                const stackedData = d3.stack()
+                    .offset(d3.stackOffsetSilhouette)
+                    .keys(keys) //这样用stack创造出的是函数！还要给他参数（data）
+                    (data)
+
+                // create a tooltip
+                const Tooltip = svgStreamScrollGroup
+                    .append("text")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .style("opacity", 0)
+                    .style("font-size", 17) //在0，0位置显示悬停的名称
+
+                // Three function that change the tooltip when user hover / move / leave a cell
+                const mouseover = function (event, d) {
+                    Tooltip.style("opacity", 1)
+                    d3.selectAll(".myArea").style("opacity", .2) //其他变半透明
+                    d3.select(this)
+                        //.style("stroke", "black")
+                        .style("opacity", 1)
+                    grp = d.key
+                    Tooltip.text(grp)
+                }
+                const mousemove = function (event, d, i) {
+
+                }
+                const mouseleave = function (event, d) {
+                    Tooltip.style("opacity", 0)
+                    d3.selectAll(".myArea").style("opacity", 1).style("stroke", "none")  // 恢复正常
+                }
+
+                // Area generator
+                const area = d3.area()
+                    .curve(d3.curveMonotoneY)  //.curve(d3.curveCatmullRom.alpha(0))
+                    .y(function (d) {
+                        return x(d.data.time);
+                    })
+                    .x0(function (d) {
+                        return y(d[0]);
+                    })
+                    .x1(function (d) {
+                        return y(d[1]);
+                    })
+
+                // Show the areas
+                svgStreamScrollGroup
+                    .selectAll("mylayers")
+                    .data(stackedData)
+                    .join("path")
+                    .attr("class", "myArea")
+                    .attr("transform", `translate(${44 / 1728 * window.innerWidth}, 0)`)
+                    .style("fill", function (d) {
+                        return color(d.key);
+                    })
+                    .attr("d", area)
+                    .on("mouseover", mouseover)
+                    .on("mousemove", mousemove)
+                    .on("mouseleave", mouseleave)
+            })
+        }
+
+    }
+</script>
+
+<script>
+    // var winWid = window.innerWidth;
+    // winWid *= 0.99;          //用户实际所用到的地方要小一些，所以要分别缩小一点，不然会超出用户的页面可用范围、
+    // var main_svg = d3.select("body")
+    //     .append("svg")
+    //     .attr("width", winWid)
+    //     .attr("height", "5000");
+    // d3.select(window).on('resize', resize);
+
+    //标题
+    // var header1 = main_svg.append("text")
+    //     .text("Title")
+    //     .attr("stroke", "black")
+    //     .attr("font-size", "200")
+    //     .attr("text-anchor", "middle")  // 对齐锚点设置在中点
+    //     .attr("x", winWid / 2)
+    //     .attr("y", "400");
+
+    // 背景
+    // var bglines = ["bg1bg1bg1bg1bg1bg1bg1bg1", "bg2bg2bg2bg2bg2bg2bg2bg2", "bg3bg3bg3bg3bg3bg3bg3bg3","bg4bg4bg4bg4bg4bg4bg4bg4","bg4bg4bg4bg4bg4bg4bg4bg4"]
+    // var bg1 = main_svg.append("g")
+    //     .append("text")
+    //     .selectAll("tspan")
+    //     .data(bglines)
+    //     .enter()
+    //     .append("tspan")
+    //     .attr("text-anchor", "middle")
+    //     .text(function (d, i) {
+    //         return d;
+    //     })
+    //     .attr("font-size", "25")
+    //     .attr("x", winWid / 2)
+    //     .attr("y", function (d, i) {
+    //         return 500 + 40 * i;
+    //     }) //40为行间距
+
+    // function resize() {
+    //     var winWid = window.innerWidth;
+    //     winWid *= 0.99;
+    //     main_svg.attr("width", winWid); // 刷新画布大小
+    //
+    //     // header1.attr("x", winWid / 2); //header调整位置
+    //     // bg1.attr("x", winWid / 2); //背景居中
+    // }
+</script>
+</body>
+</html>
