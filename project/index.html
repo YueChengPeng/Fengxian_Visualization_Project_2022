@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>When Wind Blows</title>
+    <title>Title</title>
 
     <script type="text/javascript" src="js/lib/jquery.min.js"></script>
     <script type="text/javascript" src="js/scrollmagic/uncompressed/ScrollMagic.js"></script>
@@ -468,42 +468,73 @@
 </head>
 <body>
 
+<!--加载-->
+<div id="loadingCovering" style="position:absolute;left: 50%; top: 50%; transform: translate(-50%, -50%); /* 50%为自身尺寸的一半 */
+    -webkit-transform: translate(-50%, -50%); z-index: 5; height: 100%; width: 100%; background-color: #141414; position:fixed;">
+    <div class="spinner-border text-warning" style="left: 50%; top:50%; position: relative"></div>
+
+</div>
 
 <!--封面-->
 <div id="pageStart"></div>
 
 
-<div class="row" style="width: 100%; height: 100%;">
+<!--video和遮挡的矩形-->
+<div style="position:absolute;left: 50%; top: 50%; transform: translate(-50%, -50%); /* 50%为自身尺寸的一半 */
+    -webkit-transform: translate(-50%, -50%); z-index: -1">
+    <div style="position:absolute; transform: translate(0px, -1px); height: 20%; width: 100%; background-image: -webkit-linear-gradient(90deg, rgba(20,20,20,0), #141414)"></div>
+    <div style="position:absolute; transform: translate(0px, -1px); height: 20%; width: 100%; background-image: -webkit-linear-gradient(90deg, rgba(20,20,20,0), #141414)"></div>
+    <div style="position:absolute; transform: translate(0px, 400%); height: 20%; width: 100%; background-image: -webkit-linear-gradient(90deg, #141414, rgba(20,20,20,0))"></div>
+    <div style="position:absolute; transform: translate(0px, 400%); height: 20%; width: 100%; background-image: -webkit-linear-gradient(90deg, #141414, rgba(20,20,20,0))"></div>
 
-    <div class="col-lg-5" style="padding: 5rem; padding-left: 10rem">
-        <p class="h1title fontWhite" style="">WHEN</p>
-        <p class="h1title fontWhite"
-           style="font-size: 4.5rem; text-align:center; margin-left: 3rem;background-image: -webkit-linear-gradient(45deg, #da7d1e, #ffc000);">
-            WIND</p>
-        <p class="h1title fontWhite" style="font-size: 5rem;">BLOWS</p>
+    <div style="position:absolute; height: 100%; width: 100%; background-color: #141414; opacity: .3"></div>
 
+    <video id="coverVideo" src="asset/mp4/coverVideo.mp4" style="height: 90vh;" autoplay="autoplay" muted="muted" preload="auto"
+           loop="loop"></video>
+</div>
+
+
+<!--封面文字-->
+<div style="margin-left: 5rem; margin-right: 5rem; height:100vh; display: flex; flex-direction: row; justify-content: space-between; z-index: 2">
+    <div style="height:100%; display: flex; flex-direction: column; justify-content: center">
+        <span class="h1title fontWhite">A BLOW OF</span>
+        <span class="h1title fontGrad45">ANGRY WIND</span>
+        <span class="h1title fontWhite">BROKE CHAINS</span>
+        <span class="h1title fontWhite"> ON A MOTHER</span>
     </div>
+    <div style="height:100%; display: flex; flex-direction: column; justify-content: center">
+        <div style="display: flex; flex-direction: column">
+            <span id="coverNoViews" class="h1title fontGrad45" align="right">0</span>
+            <span class="h1title fontWhite" align="right" style="font-size: 1rem; opacity: .6">views</span>
+            <br>
+        </div>
 
-    <div class="col-lg-7" style="padding: 5rem">
-        <img src="asset/img/coverBg.png" style="width: 100%">
+        <div style="display: flex; flex-direction: column">
+            <span id="coverNoDiscussions" class="h1title fontGrad45" align="right">0</span>
+            <span class="h1title fontWhite" align="right" style="font-size: 1rem; opacity: .6">discussions</span>
+            <br>
+        </div>
+
+        <div style="display: flex; flex-direction: column">
+            <span id="coverNoOriginals" class="h1title fontGrad45" align="right">0</span>
+            <span class="h1title fontWhite" align="right" style="font-size: 1rem; opacity: .6">original posters</span>
+
+            <div align="right" style="margin-top: 2rem">
+                <button type="button" class="questionUnSelected normalContent" data-toggle="tooltip" data-bs-placement="left"
+                        title="data of 142 hashtags on Weibo.com related to this incident"
+                        style="opacity: 1" onmouseover="questionMap(1)">?
+                </button>
+            </div>
+        </div>
 
     </div>
 </div>
-<div style="margin-left: 20rem; margin-right: 20rem; text-align: center; margin-bottom: 12rem">
-    <p class="h3title fontHighlight">When wind blows,</p>
-    <p class="h3title fontWhite">it blows away lies,</p>
-    <p class="h3title fontWhite">only the truth stands.</p>
-    <br>
-    <p class="h3title fontHighlight">When wind blows,</p>
-    <p class="h3title fontWhite">it blows away injustice,</p>
-    <p class="h3title fontWhite">only peace remains.</p>
-    <br>
-    <p class="h3title fontHighlight">Let the wind blow.</p>
-</div>
+
+
 
 <!--背景引言-->
 <div style="margin-left: 20rem; margin-right: 20rem; margin-top: 10rem; margin-bottom: 5rem">
-    <p class="h2title" style="text-align: center; margin-bottom: 8rem"><span class="fontWhite">BACKGROUND</span></p>
+    <!--    <p class="h2title" style="text-align: center; margin-bottom: 8rem"><span class="fontWhite">BACKGROUND</span></p>-->
     <p class="normalContent" style="">
         In Jan 27, 2022, a TikTok video of a Chinese mother of eight locked up in a worn-out village shed with a chain
         around her neck went viral and sparked widespread outrage.
@@ -521,7 +552,7 @@
 
     <div class="postCard" style="margin-right: 20rem; margin-left: 2rem; border-radius:25px;">
         <div style="display: flex; align-items: flex-end;">
-            <p class="postName">Investigation Report 1 · County Level</p>
+            <p class="postName">The First Investigation Report</p>
         </div>
         <p class="normalContent" style="opacity: .7; margin: 0rem">After the preliminary investigation verification, the
             mother got married with Dong in August 1998, and <span class="normalContentHighlight">there is no human trafficking</span>.
@@ -595,15 +626,26 @@
     </div>
 </div>
 
-<!--motivation-->
-<div style="margin-left: 20rem; margin-right: 20rem; margin-top: 10rem; margin-bottom: 5rem">
 
-    <p class="normalContent" style="margin-top: 2rem">Through this work, I aimed to demonstrate the <span
-            class="normalContentBigwordHighlight">incomparable strength of public opinion</span> visually, and call for
-        more awareness and actions towards human trafficking and many other social issues alike.</p>
-
-
+<div style="margin-left: 20rem; margin-right: 20rem; text-align: center; margin-bottom: 0rem">
+    <p class="h3title fontHighlight">When wind blows,</p>
+    <p class="h3title fontWhite">it blows away lies,</p>
+    <p class="h3title fontWhite">only the truth stands.</p>
+    <br>
+    <p class="h3title fontHighlight">When wind blows,</p>
+    <p class="h3title fontWhite">it blows away injustice,</p>
+    <p class="h3title fontWhite">only peace remains.</p>
+    <br>
+    <p class="h3title fontHighlight">Let the wind blow.</p>
 </div>
+
+<!--motivation-->
+<!--<div style="margin-left: 20rem; margin-right: 20rem; margin-top: 10rem; margin-bottom: 5rem">-->
+
+<!--    <p class="normalContent" style="margin-top: 2rem">Through this work, I aimed to demonstrate the <span-->
+<!--            class="normalContentBigwordHighlight">incomparable strength of public opinion</span> visually, and call for-->
+<!--        more awareness and actions towards human trafficking and many other social issues alike.</p>-->
+<!--</div>-->
 
 
 <!--Encode Posts and Hashtags-->
@@ -645,7 +687,7 @@
                 </p>
 
                 <p class="normalContent">
-                    Click <img src="asset/svg/info.svg" style="height: 1rem; display: inline-flex; margin: 0rem .2rem"
+                    Click <img src="asset/svg/info.svg" style="height: 1rem; display: inline-flex; margin: 0rem .2rem; cursor: pointer"
                                onclick="showTooltipOverlayIntro()" data-toggle="tooltip" data-bs-placement="bottom"
                                title="detailed information"/> to see detailed information of encoding rules.
                 </p>
@@ -673,7 +715,7 @@
                 </p>
 
                 <p class="normalContent">
-                    Click each wisp of wind to explore more. Click <img src="asset/svg/info.svg" style="height: 1rem; display: inline-flex; margin: 0rem .2rem"
+                    Click each wisp of wind to explore more. Click <img src="asset/svg/info.svg" style="height: 1rem; display: inline-flex; margin: 0rem .2rem; cursor: pointer"
                                                                         onclick="showTooltipOverlayIntro_wind()" data-toggle="tooltip" data-bs-placement="bottom"
                                                                         title="detailed information"/> to see detailed information of encoding rules.
 
@@ -681,16 +723,16 @@
 
             </div>
 
-<!--            <div style="margin-bottom: 16rem">-->
+            <!--            <div style="margin-bottom: 16rem">-->
 
-<!--&lt;!&ndash;                <p class="normalContent">&ndash;&gt;-->
-<!--&lt;!&ndash;                    Each windline glyph encodes 5 attributes of hashtag data.&ndash;&gt;-->
-<!--&lt;!&ndash;                </p>&ndash;&gt;-->
+            <!--&lt;!&ndash;                <p class="normalContent">&ndash;&gt;-->
+            <!--&lt;!&ndash;                    Each windline glyph encodes 5 attributes of hashtag data.&ndash;&gt;-->
+            <!--&lt;!&ndash;                </p>&ndash;&gt;-->
 
-<!--                <p class="normalContent">-->
-<!--                     </p>-->
+            <!--                <p class="normalContent">-->
+            <!--                     </p>-->
 
-<!--            </div>-->
+            <!--            </div>-->
 
             <div style="margin-bottom: 0rem">
 
@@ -720,12 +762,12 @@
 </div>
 
 <!--背景windline动画 video-->
-<div style="position:fixed; top: 0rem; left: 0rem; z-index: -1">
-    <video id="windAnimVideo" preload="auto" src="asset/mp4/windAnim.mp4" muted="muted" style="position:fixed; top: 0px; z-index: -1"></video>
+<div style="position:fixed; top: 0rem; left: 0rem; z-index: -2">
+    <video id="windAnimVideo" preload="auto" src="asset/mp4/windAnim.mp4" muted="muted" style="position:fixed; top: 0px;"></video>
 </div>
 
 <div id="windAnimSvgOverlayDiv" style="display: none; position:fixed; top: 0rem; left: 0rem; z-index: 3">
-<!--    src="asset/svg/windGlyph.svg"-->
+    <!--    src="asset/svg/windGlyph.svg"-->
 </div>
 
 
@@ -743,7 +785,7 @@
                     followers of the poster.</p>
                 <div id="followerTooltipIntro"></div>
                 <div class="normalContent"
-                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 10.5rem">
+                     style="font-size: 0.3em;font-min-size: 11px; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 10.5rem">
                     <p style="display: inline-flex; margin-bottom: 0px">≤10K</p>
                     <p style="display: inline-flex; margin-bottom: 0px">10K-1M</p>
                     <p style="display: inline-flex; margin-bottom: 0px">>1M</p>
@@ -757,7 +799,7 @@
                     no. of retweets.</p>
                 <div id="retweetTooltipIntro"></div>
                 <div class="normalContent"
-                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 10rem">
+                     style="font-size: 0.3em;font-min-size: 11px; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 10rem">
                     <p style="display: inline-flex; margin-bottom: 0px; user-select: none;">≤500</p>
                     <div style="display: inline-flex;">
                         <p style="margin-bottom: 0px; user-select: none;">>500:</p>
@@ -783,7 +825,7 @@
                     (hover on the seed head to see patterns)</p>
                 <div id="commentTooltipIntro"></div>
                 <div class="normalContent"
-                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 10rem">
+                     style="font-size: 0.3em;font-min-size: 11px; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 10rem">
                     <p style="display: inline-flex; margin-bottom: 0px">≤10</p>
                     <p style="display: inline-flex; margin-bottom: 0px">10-100</p>
                     <p style="display: inline-flex; margin-bottom: 0px">>100</p>
@@ -801,7 +843,7 @@
                     account type of the poster.</p>
                 <div id="vlevelTooltipIntro"></div>
                 <div class="normalContent"
-                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: .5rem; padding-right: 6rem">
+                     style="font-size: 0.3em; font-min-size: 11px;display: flex; justify-content: space-between; padding-left: .5rem; padding-right: 6rem">
                     <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.1</p>
                     <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.2</p>
                     <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.3</p>
@@ -816,7 +858,7 @@
                     no. of likes.</p>
                 <div id="likeTooltipIntro"></div>
                 <div class="normalContent"
-                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 10rem">
+                     style="font-size: 0.3em; font-min-size: 11px; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 10rem">
                     <p style="display: inline-flex; margin-bottom: 0px; user-select: none;">≤5000</p>
                     <div style="display: inline-flex;">
                         <p style="margin-bottom: 0px; user-select: none;">>5000:</p>
@@ -840,7 +882,7 @@
                     sentiment of the post text. (hover to see the animation)</p>
                 <div id="emotionTooltipIntro"></div>
                 <div class="normalContent"
-                     style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 14rem">
+                     style="font-size: 0.3em;font-min-size: 11px; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 14rem">
                     <p style="display: inline-flex; margin-bottom: 0px; user-select: none">negative</p>
                     <div style="display: inline-flex;">
                         <div id="emotionDragBgIntro"
@@ -874,6 +916,7 @@
 <!--windLine的悬停tooltip-->
 <div class="seedTooltip" id="hashtagTooltip_wind"
      style="padding: 1rem; display: none; flex-direction: column; user-select: none; z-index: 5;">
+    <img src="asset/svg/close.svg" style="height: .8rem; position: absolute; top: .2rem; right: .2rem; cursor:pointer" onclick="tooltipInvisibleBlockDiv_wind_click()">
 
     <div id="hashtagGroupNum_wind" class="h3title fontGrad45" style="margin-bottom: 1rem"> Hashtag Group ·
         1
@@ -912,9 +955,9 @@
 
     <div style="margin-top: 0rem; margin-bottom: 1rem; display: flex; justify-content: space-between;">
         <!--display: flex-->
-<!--        <div style="vertical-align: top; display: inline-flex;  line-height:1rem; text-align:center; height: 24px">-->
-<!--            <div style="font-size: 0.4em; color: #b7b7b7; display: inline">negative</div>-->
-<!--        </div>-->
+        <!--        <div style="vertical-align: top; display: inline-flex;  line-height:1rem; text-align:center; height: 24px">-->
+        <!--            <div style="font-size: 0.4em; color: #b7b7b7; display: inline">negative</div>-->
+        <!--        </div>-->
 
         <p class="normalContent" style="font-size: .6rem; margin-bottom: 0rem">negative</p>
 
@@ -928,8 +971,8 @@
 
 
         <!--        <div style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">-->
-<!--            <div style="font-size: 0.4em; color: #b7b7b7; display: inline">positive</div>-->
-<!--        </div>-->
+        <!--            <div style="font-size: 0.4em; color: #b7b7b7; display: inline">positive</div>-->
+        <!--        </div>-->
     </div>
 
 
@@ -1068,19 +1111,21 @@
 <!--主体时间线部分-->
 <div id="samaraTimeline" style="margin: 0 auto; opacity: 0; position: relative;">
 
-    <div id="timelineStoryDiv" style="position:absolute;">
-<!--        <div id="timelineStoryBoard1" class="timelineNote" style=" top:0px; left:100px" >-->
-<!--            <p  class="normalContent">-->
-<!--                1231231231-->
-<!--            </p>-->
-<!--            <img src="asset/svg/close.svg" style="height: .8rem; position: absolute; top: .2rem; right: .2rem;" onclick="closeTimelineStoryBoard(1)">-->
-<!--        </div>-->
+    <div id="timelineStoryDiv" style="position:absolute; width: 0px; height: 0px;">
+        <!--        <div id="timelineStoryBoard1" class="timelineNote" style=" top:0px; left:100px" >-->
+        <!--            <p  class="normalContent">-->
+        <!--                1231231231-->
+        <!--            </p>-->
+        <!--            <img src="asset/svg/close.svg" style="height: .8rem; position: absolute; top: .2rem; right: .2rem;" onclick="closeTimelineStoryBoard(1)">-->
+        <!--        </div>-->
     </div>
 
 
 
     <!--    user-select: none; 设置无法选中文字；防止在拖动div操作的时候误操作   -->
     <div class="seedTooltip" id="seedTooltip" style="display: none; user-select: none; flex-direction: column; position: fixed; top: 0px; left: 0px">
+        <img src="asset/svg/close.svg" style="height: .8rem; position: absolute; top: .2rem; right: .2rem; cursor:pointer" onclick="blockDivOnClick()">
+
         <!--display: flex-->
         <div style="margin: .4rem; font-size: 1em; display: flex; align-items: flex-end; flex-wrap: wrap;">
             <!--            <p style="margin: 0px">-->
@@ -1113,11 +1158,11 @@
             </div>
 
 
-<!--            <div class="normalContent" style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">-->
-<!--            </div>-->
+            <!--            <div class="normalContent" style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">-->
+            <!--            </div>-->
 
-<!--            <div class="normalContent" style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">-->
-<!--            </div>-->
+            <!--            <div class="normalContent" style="vertical-align: top; display: inline-flex;  line-height:24px; text-align:center; height: 24px">-->
+            <!--            </div>-->
         </div>
         <a id="showFullaTag" class="normalContent" href="javascript:void(0);" rel="external nofollow" onclick="showFull()"
            style="font-size: 0.6em; margin-left: .4rem; color: #eeb106; display: inline-flex">show more</a>
@@ -1143,32 +1188,32 @@
                 <div id="postComment" class="normalContent" style="font-size: 0.6em; display: inline; ">123</div>
             </div>
 
-<!--            <div style="display: inline; margin-left: 20px; margin-right: 20px">-->
-<!--                <div class="svgDiv">-->
-<!--                    <img src="asset/svg/retweet.svg" style="display:inline;width:20px;height:20px"/>-->
-<!--                </div>-->
-<!--                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">-->
-<!--                    <div id="postRetweet" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>-->
-<!--                </div>-->
-<!--            </div>-->
+            <!--            <div style="display: inline; margin-left: 20px; margin-right: 20px">-->
+            <!--                <div class="svgDiv">-->
+            <!--                    <img src="asset/svg/retweet.svg" style="display:inline;width:20px;height:20px"/>-->
+            <!--                </div>-->
+            <!--                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">-->
+            <!--                    <div id="postRetweet" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>-->
+            <!--                </div>-->
+            <!--            </div>-->
 
-<!--            <div style="display: inline; margin-left: 20px; margin-right: 20px">-->
-<!--                <div class="svgDiv">-->
-<!--                    <img src="asset/svg/like.svg" style="display:inline;width:20px;height:20px"/>-->
-<!--                </div>-->
-<!--                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">-->
-<!--                    <div id="postLike" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>-->
-<!--                </div>-->
-<!--            </div>-->
+            <!--            <div style="display: inline; margin-left: 20px; margin-right: 20px">-->
+            <!--                <div class="svgDiv">-->
+            <!--                    <img src="asset/svg/like.svg" style="display:inline;width:20px;height:20px"/>-->
+            <!--                </div>-->
+            <!--                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">-->
+            <!--                    <div id="postLike" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>-->
+            <!--                </div>-->
+            <!--            </div>-->
 
-<!--            <div style="display: inline;  margin-left: 20px; margin-right: 20px">-->
-<!--                <div class="svgDiv">-->
-<!--                    <img src="asset/svg/comment.svg" style="display:inline;width:20px;height:20px"/>-->
-<!--                </div>-->
-<!--                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">-->
-<!--                    <div id="postComment" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>-->
-<!--                </div>-->
-<!--            </div>-->
+            <!--            <div style="display: inline;  margin-left: 20px; margin-right: 20px">-->
+            <!--                <div class="svgDiv">-->
+            <!--                    <img src="asset/svg/comment.svg" style="display:inline;width:20px;height:20px"/>-->
+            <!--                </div>-->
+            <!--                <div style="display: inline-flex; line-height:24px; text-align:center; height: 24px; vertical-align: top">-->
+            <!--                    <div id="postComment" style="font-size: 0.4em; color: #b7b7b7; display: inline; ">123</div>-->
+            <!--                </div>-->
+            <!--            </div>-->
 
 
         </div>
@@ -1177,6 +1222,7 @@
     <!--vane的tooltip-->
     <div class="seedTooltip" id="vaneTooltip"
          style="left: 6rem; display: none; flex-direction: column; user-select: none; z-index: 1; width: 14rem; padding: 1rem">
+        <img src="asset/svg/close.svg" style="height: .8rem; position: absolute; top: .2rem; right: .2rem; cursor:pointer" onclick="blockDivOnClick()">
 
         <div style="margin: 0px; font-size: 1em; display: flex; align-items: flex-end; flex-wrap: wrap; color: #eeb106">
             <!--            <p style="margin: 0px">-->
@@ -1214,7 +1260,7 @@
     <!--hashtag的tooltip-->
     <div class="seedTooltip" id="hashtagTooltip"
          style="display: none; flex-direction: column; user-select: none; z-index: 1; padding: 1rem">
-
+        <img src="asset/svg/close.svg" style="height: .8rem; position: absolute; top: .2rem; right: .2rem; cursor:pointer" onclick="blockDivOnClick()">
         <div class="h4title fontGrad45" style="display: flex; align-items: flex-end; flex-wrap: wrap; color: #eeb106; margin-bottom: 1rem">
             <div id="hashtagGroupNum" style="font-weight: bold; padding-right: 8px; line-height: 1.2;"> Hashtag Group ·
                 1
@@ -1250,9 +1296,9 @@
     </div>
 
     <!--日期div-->
-<!--    <div id="dateDiv" style="position: fixed; font-size: 0.75em; color: #eeb106; user-select: none">-->
-<!--        Jan 28, 2022-->
-<!--    </div>-->
+    <!--    <div id="dateDiv" style="position: fixed; font-size: 0.75em; color: #eeb106; user-select: none">-->
+    <!--        Jan 28, 2022-->
+    <!--    </div>-->
 
     <!--    隐形div，用于点击seed事件之后阻隔与svg的交互   -->
     <div id="invisibleBlock" style="display: none; position: fixed;" onclick="blockDivOnClick()"></div>
@@ -1276,30 +1322,32 @@
     <div>
         <div style="position: fixed; display: flex; top: .6rem; right: 0px; font-size: 0.7em; line-height: 1.2; width: 5rem; margin-right: .4rem; user-select: none">
 
-            <img src="asset/svg/left_arrow.svg" style="display:inline-flex;width:.4rem;height:auto;margin-right: .2rem" onclick="streamGraphTitlesLeftArr()"/>
+            <img src="asset/svg/left_arrow.svg" style="cursor:pointer; display:inline-flex;width:.4rem;height:auto;margin-right: .2rem" onclick="streamGraphTitlesLeftArr()"/>
 
             <p id="streamGraphTitle" class="normalContent" style="display: inline-flex; margin: 0px; text-align: center; max-width: 3.5rem">no. of hot posts</p>
             <!--   "number of hot posts" “times of view”, “times of discussion” and “number of originals-->
 
-            <img src="asset/svg/right_arrow.svg" style="display:inline-flex;width:.4rem;height:auto;margin-left: .2rem" onclick="streamGraphTitlesRightArr()"/>
+            <img src="asset/svg/right_arrow.svg" style="cursor:pointer; display:inline-flex;width:.4rem;height:auto;margin-left: .2rem" onclick="streamGraphTitlesRightArr()"/>
 
 
         </div>
         <!--右侧滑条-->
         <div id="streamGraphScroll" style="display:block; position: fixed; top:0px; right:calc(20rem / 24)">
             <div id="scrollViewBox" style="position:fixed;"></div>
-            <div class="keyEventCir" id="keyEventCir0" style="opacity: 1" onclick="keyEventCirClick(0)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 1 · county level"></div>
-            <div class="keyEventCir" id="keyEventCir1" style="opacity: 0.4" onclick="keyEventCirClick(1)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 2 · county level"></div>
-            <div class="keyEventCir" id="keyEventCir2" style="opacity: 0.4" onclick="keyEventCirClick(2)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 3 · city level"></div>
-            <div class="keyEventCir" id="keyEventCir3" style="opacity: 0.4" onclick="keyEventCirClick(3)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 4 · city level"></div>
-            <div class="keyEventCir" id="keyEventCir4" style="opacity: 0.4" onclick="keyEventCirClick(4)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 5 · provincial level"></div>
-            <div class="keyEventCir" id="keyEventCir5" style="opacity: 0.4" onclick="keyEventCirClick(5)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 6 · provincial level"></div>
+            <div class="keyEventCir" id="keyEventCir0" style="cursor: pointer;opacity: 1" onclick="keyEventCirClick(0)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 1 · county level"></div>
+            <div class="keyEventCir" id="keyEventCir1" style="cursor: pointer;opacity: 0.4" onclick="keyEventCirClick(1)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 2 · county level"></div>
+            <div class="keyEventCir" id="keyEventCir2" style="cursor: pointer;opacity: 0.4" onclick="keyEventCirClick(2)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 3 · city level"></div>
+            <div class="keyEventCir" id="keyEventCir3" style="cursor: pointer;opacity: 0.4" onclick="keyEventCirClick(3)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 4 · city level"></div>
+            <div class="keyEventCir" id="keyEventCir4" style="cursor: pointer;opacity: 0.4" onclick="keyEventCirClick(4)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 5 · provincial level"></div>
+            <div class="keyEventCir" id="keyEventCir5" style="cursor: pointer;opacity: 0.4" onclick="keyEventCirClick(5)" data-toggle="tooltip" data-bs-placement="left" title="Investigation Report 6 · provincial level"></div>
         </div>
     </div>
 
     <!--more info (tooltip panel) icon -->
     <div>
-        <img id="showTooltipOverlayImg" src="asset/svg/info.svg" style="position:fixed;width:2rem; top: 0px; right: 0px" onclick="showTooltipOverlay()"/>
+        <span style="cursor: pointer">
+            <img id="showTooltipOverlayImg" src="asset/svg/info.svg" style="position:fixed;width:2rem; top: 0px; right: 0px" onclick="showTooltipOverlay()"/>
+        </span>
     </div>
 
     <!--retrieve all story panels icon -->
@@ -1320,52 +1368,59 @@
 
 <!--主体时间线部分：覆盖的详细tooltip-->
 <div id="overlayTooltip" class="seedTooltip" style="padding: 1rem 3rem; display: none; position: fixed; z-index: 2; height: 30rem; width: 66rem">
+
     <h1 class="fontGrad45 h2title" style="width: 12rem; margin-bottom: 1rem">How to read</h1>
     <div id="timelineTooltipPage1" style="display: block" >
-        <div style="">
-            <div style="margin-bottom: 1rem;">
-                <h2 class="h4title fontHighlight" style="margin-bottom: 0px; margin-bottom: .6rem; line-height: 1rem"> <img src="asset/svg/hashtag.svg" style="display:inline-flex;width:1.8rem;height:auto; margin-left: -.5rem"/> Hashtag groups</h2>
+        <div class="row">
+            <div class="col-lg">
+                <div style="margin-bottom: 1rem;">
+                    <h2 class="h4title fontHighlight" style="margin-bottom: 0px; margin-bottom: .6rem; line-height: 1rem"> <img src="asset/svg/hashtag.svg" style="display:inline-flex;width:1.8rem;height:auto; margin-left: -.5rem"/> Hashtag groups</h2>
 
-                <p class="normalContent" style="opacity: 0.8">
-                    Posts are categorized into 8 groups by the similarity of their hashtags.
-                    And the ninth group on the right is for posts without hashtags.
-                    All the posts from each group are presented in a <span class="normalContentHighlight">vertical timeline</span>, the more posts clustered at some time means more discussion under this hashtag topic at the moment.
-                </p>
+                    <p class="normalContent" style="opacity: 0.8">
+                        Posts are categorized into 8 groups by the similarity of their hashtags.
+                        And the ninth group on the right is for posts without hashtags.
+                        All the posts from each group are presented in a <span class="normalContentHighlight">vertical timeline</span>, the more posts clustered at some time means more discussion under this hashtag topic at the moment.
+                    </p>
 
-                <p class="normalContent"  style="opacity: 0.8">
-                    Click the <span class="normalContentHighlight">hashtag icon</span> to explore details.
-                </p>
+                    <p class="normalContent"  style="opacity: 0.8">
+                        Click the <span class="normalContentHighlight">hashtag icon</span> to explore details.
+                    </p>
+
+                </div>
+
+                <div style="margin-bottom: 1rem; margin-top: 1rem">
+                    <h2 class="h4title fontHighlight" style="margin-bottom: 0px; margin-bottom: .6rem; line-height: 1rem"> <img src="asset/svg/vane.svg" style="display:inline-flex;width:2.4rem;height:auto;margin-left: -0.5rem"/> Investigation reports</h2>
+
+                    <p class="normalContent"  style="opacity: 0.8">
+                        While scrolling the timeline, the report that was released by authorities at that time shows up on the left and next to the posts.
+                    </p>
+
+                    <p class="normalContent"  style="opacity: 0.8">
+                        Click the <span class="normalContentHighlight">wind vane icon</span> to see details.
+                    </p>
+
+                </div>
 
             </div>
 
-            <div style="margin-bottom: 1rem; margin-top: 1rem">
-                <h2 class="h4title fontHighlight" style="margin-bottom: 0px; margin-bottom: .6rem; line-height: 1rem"> <img src="asset/svg/vane.svg" style="display:inline-flex;width:2.4rem;height:auto;margin-left: -0.5rem"/> Investigation reports</h2>
+            <div class="col-lg">
+                <div style="margin-bottom: 1rem">
+                    <h2 class="h4title fontHighlight" style="margin-bottom: 0px; margin-bottom: .6rem; line-height: 1rem"> <img src="asset/svg/stream_graph.svg" style="display:inline-flex;height:1.8rem;margin-right: .4rem"/> Stream graph</h2>
 
-                <p class="normalContent"  style="opacity: 0.8">
-                    While scrolling the timeline, the report that was released by authorities at that time shows up on the left and next to the posts.
-                </p>
+                    <p class="normalContent"  style="opacity: 0.8">
+                        The stream graph on the right offers a <span class="normalContentHighlight">global view </span>of all hashtag groups throughout 32 days in terms of “no. of hot posts”, “no. of view”, “no. of discussion” and “no. of original posters”
+                    </p>
 
-                <p class="normalContent"  style="opacity: 0.8">
-                    Click the <span class="normalContentHighlight">wind vane icon</span> to see details.
-                </p>
-
+                    <p class="normalContent"  style="opacity: 0.8">
+                        All the investigation reports are represented as <span class="normalContentHighlight">circles</span> near the stream graph. Click these circles to directly scroll to corresponding investigation report.
+                    </p>
+                </div>
             </div>
-
-            <div style="margin-bottom: 1rem; margin-top: 1rem">
-                <h2 class="h4title fontHighlight" style="margin-bottom: 0px; margin-bottom: .6rem; line-height: 1rem"> <img src="asset/svg/stream_graph.svg" style="display:inline-flex;height:1.8rem;margin-right: .4rem"/> Stream graph</h2>
-
-                <p class="normalContent"  style="opacity: 0.8">
-                    The stream graph on the right offers a <span class="normalContentHighlight">global view </span>of all hashtag groups throughout 32 days in terms of “no. of hot posts”, “no. of view”, “no. of discussion” and “no. of original posters”
-                </p>
-
-                <p class="normalContent"  style="opacity: 0.8">
-                    All the investigation reports are represented as <span class="normalContentHighlight">circles</span> near the stream graph. Click these circles to directly scroll to corresponding investigation report.
-                </p>
-            </div>
-
         </div>
+
+
     </div>
-    
+
     <div id="timelineTooltipPage2" style="display:none;">
         <div>
             <h2 class="h4title fontHighlight" style="margin-bottom: 0px; margin-bottom: .6rem; line-height: 1rem">Samara seeds</h2>
@@ -1380,7 +1435,7 @@
                         <p class="normalContent" style="font-size: .6rem; opacity: .6">Seed head size shows no. of
                             followers of the poster.</p>
                         <div id="followerTooltip"></div>
-                        <div class="normalContent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 9.5rem">
+                        <div class="normalContent" style="font-size: 0.3em;font-min-size: 11px; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 9.5rem">
                             <p style="display: inline-flex; margin-bottom: 0px">≤10K</p>
                             <p style="display: inline-flex; margin-bottom: 0px">10K-1M</p>
                             <p style="display: inline-flex; margin-bottom: 0px">>1M</p>
@@ -1393,7 +1448,7 @@
                         <p class="normalContent" style="font-size: .6rem; opacity: .6">Seed stem length represents the
                             no. of retweets.</p>
                         <div id="retweetTooltip"></div>
-                        <div class="normalContent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 9rem">
+                        <div class="normalContent" style="font-size: 0.3em;font-min-size: 11px; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 9rem">
                             <p style="display: inline-flex; margin-bottom: 0px; user-select: none;">≤500</p>
                             <div style="display: inline-flex;">
                                 <p style="margin-bottom: 0px; user-select: none;">>500:</p>
@@ -1413,7 +1468,7 @@
                         <p class="normalContent" style="font-size: .6rem; opacity: .6">Wing pattern shows the no. of comments.
                             (hover on the seed head to see patterns)</p>
                         <div id="commentTooltip"></div>
-                        <div class="normalContent" class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 9rem">
+                        <div class="normalContent" class="overlayTooltipcontent" style="font-size: 0.3em;font-min-size: 11px; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 9rem">
                             <p style="display: inline-flex; margin-bottom: 0px">≤10</p>
                             <p style="display: inline-flex; margin-bottom: 0px">10-100</p>
                             <p style="display: inline-flex; margin-bottom: 0px">>100</p>
@@ -1430,7 +1485,7 @@
                         <p class="normalContent" style="font-size: .6rem; opacity: .6">The dot(s) near the seed head indicates Weibo
                             account type of the poster.</p>
                         <div id="vlevelTooltip"></div>
-                        <div class="normalContent" class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 1.2rem; padding-right: 5.5rem">
+                        <div class="normalContent" class="overlayTooltipcontent" style="font-size: 0.3em; font-min-size: 11px;display: flex; justify-content: space-between; padding-left: 1.2rem; padding-right: 5.5rem">
                             <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.1</p>
                             <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.2</p>
                             <p class="col-3 text-center" style="display: inline-flex; margin-bottom: 0px">Individual Lv.3</p>
@@ -1444,7 +1499,7 @@
                         <p class="normalContent" style="font-size: .6rem; opacity: .6">Seed wing width represents the
                             no. of likes.</p>
                         <div id="likeTooltip"></div>
-                        <div class="normalContent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 9rem">
+                        <div class="normalContent" style="font-size: 0.3em; font-min-size: 11px;display: flex; justify-content: space-between; padding-left: 4rem; padding-right: 9rem">
                             <p style="display: inline-flex; margin-bottom: 0px; user-select: none;">≤5000</p>
                             <div style="display: inline-flex;">
                                 <p style="margin-bottom: 0px; user-select: none;">>5000:</p>
@@ -1464,7 +1519,7 @@
                         <p class="normalContent" style="font-size: .6rem; opacity: .6">Seed head color represents the
                             sentiment of the post text. (hover to see the animation)</p>
                         <div id="emotionTooltip"></div>
-                        <div class="normalContent" class="overlayTooltipcontent" style="font-size: 0.3em; display: flex; justify-content: space-between; padding-left: 2rem; padding-right: 12rem">
+                        <div class="normalContent" class="overlayTooltipcontent" style="font-size: 0.3em; font-min-size: 11px;display: flex; justify-content: space-between; padding-left: 2rem; padding-right: 12rem">
                             <p style="display: inline-flex; margin-bottom: 0px">negative</p>
                             <div style="display: inline-flex;">
                                 <div id="emotionDragBg" style="background: #e5e1d9; opacity: 0.6; width:120px; height:6px; border-radius: 3px; justify-content: center; align-self: center; margin: 0px">
@@ -1500,11 +1555,11 @@
     </p>
 
     <p class="normalContent" style="margin-bottom: 4rem">
-        And it’s not just in China, human trafficking is an <span class="normalContentHighlight">international problem</span>. An estimated <span class="normalContentHighlight">40.3M</span> victims are trapped in modern-day slavery(ILO, 2017). We absolutely need much more awareness, voices and most importantly, actions, towards human trafficking.
+        And it’s not just in China, human trafficking is an <span class="normalContentHighlight">international problem</span>. An estimated <span class="normalContentHighlight">40.3 million</span> victims are trapped in modern-day slavery(ILO, 2017). We absolutely need much more awareness, voices and in turn, actions, towards human trafficking.
     </p>
 
     <p class="normalContent">
-        This visualization reveals the distribution of human trafficking cases globally. Larger wind glyph indicates more human trafficking cases, thus needing more awareness, public voices and actions.
+        This visualization reveals the distribution of human trafficking cases globally. Larger wind glyph indicates more human trafficking cases, thus needing more public voices and actions.
     </p>
 
     <p class="normalContent">
@@ -2314,7 +2369,7 @@
     </p>
 
     <p class="normalContent">
-        To learn more about my design process and tech details, please visit <a class="fontHighlight" href="https://yuechengpeng.github.io/Fengxian_Visualization_Project_2022/portfolio/">the portfolio page</a> of this project.
+        To learn more about my design process and tech details, please visit <a class="fontHighlight" href="https://https://yuechengpeng.github.io/Fengxian_Visualization_Project_2022/portfolio/">the portfolio page</a> of this project.
     </p>
 
 </div>
@@ -2350,6 +2405,16 @@
     });
 </script>
 
+<!--初始加载-->
+<script>
+    window.onload = function(){
+        $("#loadingCovering").hide();
+        console.log('onload加载之后触发');
+        $setJumpNumber(1000000, 118200000000, 1, "#coverNoViews");
+        $setJumpNumber(200000, 11200000, 1, "#coverNoDiscussions");
+        $setJumpNumber(1000, 271000, 1, "#coverNoOriginals");
+    }
+</script>
 
 <!--初始变量和函数-->
 <script>
@@ -2461,6 +2526,16 @@
         }, timeNum);
 
     };
+
+    //设置封面数字跳动
+    window.onload = function(){
+        $("#loadingCovering").hide();
+        console.log('onload加载之后触发');
+        $setJumpNumber(1000000, 118200000000, 1, "#coverNoViews");
+        $setJumpNumber(200000, 11200000, 1, "#coverNoDiscussions");
+        $setJumpNumber(1000, 271000, 1, "#coverNoOriginals");
+    }
+
 
     function geneSeed_Tp_Intro(tooltipSvg, tooltipDef, index, cx, cy, followercat, emo_neg_prob, commentCat, isVlevelOn, vlevel, gScale, like, comment, retweet,) {
         var scaleLengthId;
@@ -2884,13 +2959,21 @@
 
                 //绑定windline交互事件
                 for (let index = 1; index <= 8; index++) {
+
                     d3.select(`#windCat${index}`)
+                        .style("cursor", "pointer")
                         .on("mouseover", function (d, i) {
 
                             // d3.select("#hashtagTooltip_wind")
                             //     .style("display", "block")
                             //     .style("top", `${d3.pointer(d)[1]}px`)
                             //     .style("left", `${d3.pointer(d)[0]}px`)
+
+                            for (let k=1; k<=8; k++){
+                                if (k!=index)
+                                    d3.select(`#windCat${k}`)
+                                        .style("opacity", ".8")
+                            }
 
                             //更改名称：Hashtag Group · X
                             d3.select("#hashtagGroupNum_wind")
@@ -2960,6 +3043,11 @@
                         })
 
                         .on("mouseleave", function () {
+                            if (!isTooltipFixed_wind)
+                                for (let k=1; k<=8; k++){
+                                    d3.select(`#windCat${k}`)
+                                        .style("opacity", "0")
+                                }
                             if (!isTooltipFixed_wind) {
                                 d3.select("#hashtagTooltip_wind")
                                     .style("display", "none")
@@ -2969,6 +3057,11 @@
                             isTooltipFixed_wind = true;
                             d3.select("#tooltipInvisibleBlockDiv_wind")
                                 .style("display", "block")
+                            for (let k=1; k<=8; k++){
+                                if (k!=index)
+                                    d3.select(`#windCat${k}`)
+                                        .style("opacity", ".8")
+                            }
                         });
                 }
 
@@ -3044,6 +3137,11 @@
         d3.select("#hashtagTooltip_wind")
             .style("display", "none")
 
+        for (let k=1; k<=8; k++){
+            d3.select(`#windCat${k}`)
+                .style("opacity", "0")
+        }
+
         //初始化为show more
         isshowFullHashtag_wind = false;
         d3.select("#showFullHashtag_wind").html("show more");
@@ -3084,6 +3182,233 @@
     }
 </script>
 
+<!--Intro 部分 dragbox 拖动-->
+<!--retweet dragbox 拖动-->
+<script>
+    var retweetDragBoxIntro = document.getElementById("retweetDragBoxIntro")
+    retweetDragBoxIntro.onmousedown = function (e) {
+
+        //显示tooltip
+        d3.select("#retweetNumIntro")
+            .style("display", "block")
+
+        var e = e || window.event // 兼容ie浏览器
+
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof retweetDragBoxIntro.setCapture !== 'undefined') {
+            retweetDragBoxIntro.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.getElementById("retweetDragBgIntro").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if (left < 0)
+                left = 0;
+            if (left > 108)
+                left = 108;
+
+            let retweetNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([500, 5000])
+            let retweetYScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([32 * widScaleRatio, 40 * widScaleRatio])
+
+            //更改tooltip内容
+            d3.select("#retweetNumIntro")
+                .html(parseInt(retweetNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed_Intro9")
+                .remove();
+            geneSeed_Tp_Intro(retweetSvgIntro, retweetDefsIntro, 9, 320 * widScaleRatio, retweetYScale(left), 1, 0.5, 1, false, "yellow", 0.3, 1, 1, parseInt(retweetNumScale(left)));
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            retweetDragBoxIntro.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+            d3.select("#retweetNumIntro")
+                .style("display", "none")
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof retweetDragBoxIntro.releaseCapture !== 'undefined') {
+                retweetDragBoxIntro.releaseCapture()
+            }
+        }
+
+    }
+</script>
+
+<!--like dragbox 拖动-->
+<script>
+    var likeDragBoxIntro = document.getElementById("likeDragBoxIntro")
+    likeDragBoxIntro.onmousedown = function (e) {
+
+        //显示tooltip
+        d3.select("#likeNumIntro")
+            .style("display", "block")
+
+        var e = e || window.event // 兼容ie浏览器
+
+        console.log(likeDragBoxIntro.offsetLeft)
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof likeDragBoxIntro.setCapture !== 'undefined') {
+            likeDragBoxIntro.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.getElementById("likeDragBgIntro").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if (left < 0)
+                left = 0;
+            if (left > 108)
+                left = 108;
+
+            let likeNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([5000, 50000])
+            // let likeYScale = d3.scaleLinear()
+            //     .domain([0, 108])
+            //     .range([32, 42])
+
+            //更改tooltip内容
+            d3.select("#likeNumIntro")
+                .html(parseInt(likeNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed_Intro11")
+                .remove();
+            geneSeed_Tp_Intro(likeSvgIntro, likeDefsIntro, 11, 320, 32, 1, 0.5, 1, false, "yellow", 0.3, parseInt(likeNumScale(left)), 1, 1);
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            likeDragBoxIntro.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+            d3.select("#likeNum")
+                .style("display", "none")
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof likeDragBox.releaseCapture !== 'undefined') {
+                likeDragBox.releaseCapture()
+            }
+        }
+
+    }
+</script>
+
+<!--emotion dragbox 拖动-->
+<script>
+    var emotionDragBoxIntro = document.getElementById("emotionDragBoxIntro")
+    emotionDragBoxIntro.onmousedown = function (e) {
+
+        var e = e || window.event // 兼容ie浏览器
+
+        console.log(emotionDragBoxIntro.offsetLeft)
+        // var diffX = e.clientX - retweetDragBox.offsetLeft
+
+        /* 低版本ie bug:物体被拖出浏览器可是窗口外部时，还会出现滚动条，
+                解决方法是采用ie浏览器独有的2个方法setCapture()\releaseCapture(),这两个方法，
+                可以让鼠标滑动到浏览器外部也可以捕获到事件，而我们的bug就是当鼠标移出浏览器的时候，
+                限制超过的功能就失效了。用这个方法，即可解决这个问题。注：这两个方法用于onmousedown和onmouseup中 */
+        if (typeof emotionDragBoxIntro.setCapture !== 'undefined') {
+            emotionDragBoxIntro.setCapture()
+        }
+
+        document.onmousemove = function (e) {
+            var e = e || window.event // 兼容ie浏览器
+            // var left = e.clientX - diffX
+            var left = e.clientX - document.getElementById("emotionDragBgIntro").getBoundingClientRect().left  //这里为什么需要-90需要再测试一下不同长宽条件下
+
+            if (left < 0)
+                left = 0;
+            if (left > 108)
+                left = 108;
+
+            let emotionNumScale = d3.scaleLinear()
+                .domain([0, 108])
+                .range([1, 0])
+            // let likeYScale = d3.scaleLinear()
+            //     .domain([0, 108])
+            //     .range([32, 42])
+
+            // //更改tooltip内容
+            // d3.select("#likeNum")
+            //     .html(parseInt(likeNumScale(left)))
+
+            //刷新seed
+            d3.select("#Tp_seed_Intro15")
+                .remove();
+            d3.select("#Tp_emo_grad_Intro15")
+                .remove(); //删除渐变
+            console.log(`emo${emotionNumScale(left)}`)
+            geneSeed_Tp_Intro(emotionSvgIntro, emotionDefsIntro, 15, 210, 30, 1, emotionNumScale(left), 1, false, "yellow", 0.3, 1, 200, 1);
+
+
+            // 移动时重新得到物体的距离，解决拖动时出现晃动的现象
+            emotionDragBoxIntro.style.left = left + 'px'
+
+            //改变viewBox
+            // timelineSvg
+            //     .attr("viewBox", `0 ${scrollReverseBoxScale(top)} ${windowWid * 0.96} ${windowHei * 0.98}`);
+
+        }
+
+
+        document.onmouseup = function (e) { // 当鼠标弹起来的时候不再移动
+            // console.log('this', this)
+
+
+            this.onmousemove = null
+            this.onmouseup = null // 预防鼠标弹起来后还会循环（即预防鼠标放上去的时候还会移动）
+
+            // 修复低版本ie bug
+            if (typeof emotionDragBoxIntro.releaseCapture !== 'undefined') {
+                emotionDragBoxIntro.releaseCapture()
+            }
+        }
+
+    }
+</script>
 
 <!--seed点击"i"的tooltip-->
 <script>
@@ -3132,49 +3457,49 @@
         geneSeed_Tp_Intro(vlevelSvg, vlevelDefs, 7, 470 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 1, true, "blue", 0.3 * widScaleRatio, 1, 1, 1);
 
         //retweet部分tooltip
-        var retweetSvg = d3.select("#retweetTooltipIntro")
+        var retweetSvgIntro = d3.select("#retweetTooltipIntro")
             .append("svg")
             .attr("width", `100%`)
             .attr("height", `${2}rem`)
 
-        var retweetDefs = retweetSvg.append("defs");
+        var retweetDefsIntro = retweetSvgIntro.append("defs");
 
-        geneSeed_Tp_Intro(retweetSvg, retweetDefs, 8, 100 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 1, false, "normal", 0.3 * widScaleRatio, 1, 1, 1);
-        geneSeed_Tp_Intro(retweetSvg, retweetDefs, 9, 320 * widScaleRatio, 32 * heiScaleRatio, 1, 0.5, 1, false, "yellow", 0.3 * widScaleRatio, 1, 1, 500);
+        geneSeed_Tp_Intro(retweetSvgIntro, retweetDefsIntro, 8, 100 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 1, false, "normal", 0.3 * widScaleRatio, 1, 1, 1);
+        geneSeed_Tp_Intro(retweetSvgIntro, retweetDefsIntro, 9, 320 * widScaleRatio, 32 * heiScaleRatio, 1, 0.5, 1, false, "yellow", 0.3 * widScaleRatio, 1, 1, 500);
         //滑条：cy从30到42；retweet从500到5k
 
         //likes部分tooltip
-        var likeSvg = d3.select("#likeTooltipIntro")
+        var likeSvgIntro = d3.select("#likeTooltipIntro")
             .append("svg")
             .attr("width", `100%`)
             .attr("height", `${2}rem`)
 
-        var likeDefs = likeSvg.append("defs");
+        var likeDefsIntro = likeSvgIntro.append("defs");
 
-        geneSeed_Tp_Intro(likeSvg, likeDefs, 10, 100 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 1, false, "normal", 0.3 * widScaleRatio, 1, 1, 1);
-        geneSeed_Tp_Intro(likeSvg, likeDefs, 11, 320 * widScaleRatio, 32 * heiScaleRatio, 1, 0.5, 1, false, "yellow", 0.3 * widScaleRatio, 1, 1, 500);
+        geneSeed_Tp_Intro(likeSvgIntro, likeDefsIntro, 10, 100 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 1, false, "normal", 0.3 * widScaleRatio, 1, 1, 1);
+        geneSeed_Tp_Intro(likeSvgIntro, likeDefsIntro, 11, 320 * widScaleRatio, 32 * heiScaleRatio, 1, 0.5, 1, false, "yellow", 0.3 * widScaleRatio, 1, 1, 500);
 
         //comment部分tooltip
-        var commentSvg = d3.select("#commentTooltipIntro")
+        var commentSvgIntro = d3.select("#commentTooltipIntro")
             .append("svg")
             .attr("width", `100%`)
             .attr("height", `${2}rem`)
 
-        var commentDefs = commentSvg.append("defs");
+        var commentDefsIntro = commentSvgIntro.append("defs");
 
-        geneSeed_Tp_Intro(commentSvg, commentDefs, 12, 100 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 1, false, "normal", 0.3 * widScaleRatio, 1, 1, 1);
-        geneSeed_Tp_Intro(commentSvg, commentDefs, 13, 270 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 2, false, "yellow", 0.3 * widScaleRatio, 1, 100, 1);
-        geneSeed_Tp_Intro(commentSvg, commentDefs, 14, 460 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 3, false, "yellow", 0.3 * widScaleRatio, 1, 200, 1);
+        geneSeed_Tp_Intro(commentSvgIntro, commentDefsIntro, 12, 100 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 1, false, "normal", 0.3 * widScaleRatio, 1, 1, 1);
+        geneSeed_Tp_Intro(commentSvgIntro, commentDefsIntro, 13, 270 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 2, false, "yellow", 0.3 * widScaleRatio, 1, 100, 1);
+        geneSeed_Tp_Intro(commentSvgIntro, commentDefsIntro, 14, 460 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 3, false, "yellow", 0.3 * widScaleRatio, 1, 200, 1);
 
         //emotion部分tooltip
-        var emotionSvg = d3.select("#emotionTooltipIntro")
+        var emotionSvgIntro = d3.select("#emotionTooltipIntro")
             .append("svg")
             .attr("width", `100%`)
             .attr("height", `${2}rem`)
 
-        var emotionDefs = emotionSvg.append("defs");
+        var emotionDefsIntro = emotionSvgIntro.append("defs");
 
-        geneSeed_Tp_Intro(emotionSvg, emotionDefs, 15, 210 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 3, false, "yellow", 0.3 * widScaleRatio, 1, 200, 1);
+        geneSeed_Tp_Intro(emotionSvgIntro, emotionDefsIntro, 15, 210 * widScaleRatio, 30 * heiScaleRatio, 1, 0.5, 3, false, "yellow", 0.3 * widScaleRatio, 1, 200, 1);
 
     }
 
@@ -3309,7 +3634,7 @@
 
 
             d3.select("#Tp_seed_IntroseedIntroGroup")
-                .attr("transform", `translate(${xScale(event.progress)}, 0), scale(${xscaleScale(event.progress)}, 1)`);
+                .attr("transform", `translate(${xScale(event.progress)}, 0), scale(${xscaleScale(event.progress)}, ${widScaleRatio})`);
 
         })
         // .addIndicators({name: "pin"}) // add indicators (requires plugin)
@@ -3366,7 +3691,7 @@
 
 
             d3.select("#Tp_seed_IntroseedIntroGroup")
-                .attr("transform", `translate(${xScale(event.progress)}, 0), scale(${xscaleScale(event.progress)}, 1)`);
+                .attr("transform", `translate(${xScale(event.progress)}, 0), scale(${xscaleScale(event.progress)}, ${widScaleRatio})`);
 
 
 
@@ -3437,7 +3762,7 @@
 
     var svg1Group = svg1.append("g")
         .attr("id", "Tp_seed_IntroseedIntroGroup")
-        // .attr("transform", "scale(.4, 1)");
+    // .attr("transform", "scale(.4, 1)");
 
     geneSeed_Tp_Intro(svg1Group, defs, "seedIntro", 150 * widScaleRatio, 450 * heiScaleRatio, 1, 0.5, 1, true, "yellow", 1.5 * widScaleRatio, 1, 1, 1);
     //种子初始设置为透明
@@ -3450,7 +3775,7 @@
         .attr("stroke", "#FFCA36")
         .attr("stroke-width", "2")
         .attr("stroke-dasharray", "1000")
-        .attr("stroke-dashoffset", "-1800")
+        .attr("stroke-dashoffset", "1000")
         .attr("stroke-linecap", "round")
         .attr("opacity", "0.6")
         .attr("fill", "none");
@@ -3518,7 +3843,7 @@
 
         `On Feb 22, the "husband" of the mother was arrested on suspicion of torture.`,
 
-        `Ob Feb 23, authorities released the last report, concerning the identity of the mother, process of trafficking, current mental and physical condition of the mother, and punishment of 17 officials. Only at this time were there a burst in reports from official media. `
+        `Ob Feb 23, authorities released the last report, concerning the identity of the mother, process of trafficking, current mental and physical condition of the mother, and punishment of 17 officials. <span class="normalContentHighlight">Only at this time there were a burst in reports from the official media (indicated by blue dots on the seed head), who have kept silent nearly throughout this incident. </span>`
     ];
 
     var timelineStoryDivContentTotal = ""
@@ -3529,7 +3854,7 @@
             <p  class="normalContent" style="margin: 0rem">
                 ${timelineStoryContent[i]}
             </p>
-            <img src="asset/svg/close.svg" style="height: .8rem; position: absolute; top: .2rem; right: .2rem;" onclick="closeTimelineStoryBoard(1)">
+            <img src="asset/svg/close.svg" style="height: .8rem; position: absolute; top: .2rem; right: .2rem; cursor:pointer" onclick="closeTimelineStoryBoard(${i+1})">
         </div>`
     }
 
@@ -3600,6 +3925,9 @@
 
 <!--jump to related hashtag tooltip-->
 <script>
+    // window.onload = function(){
+    //         console.log('onload加载之后触发');
+    // }
     $(function () {
         $("[data-toggle='tooltip']").tooltip();
 
@@ -4916,6 +5244,7 @@
 
         windVaneGroup.append("path")
             .attr("id", `windVaneBody${i}`)
+            .style("cursor", "pointer")
             .attr("d", "M80.8,37.28a1,1,0,0,1-1,1H76.72l2.15,2.16a1,1,0,0,1,0,1.41,1,1,0,0,1-1.41,0l-2.22-2.22a4.54,4.54,0,0,1-3.88,2.18h-.45v3.85a1.5,1.5,0,0,1-3,0V41.81H60a15.28,15.28,0,0,1-15.11-13H37V48.49l3.09-1.12A26.08,26.08,0,0,0,36,54.72a25.83,25.83,0,0,0-4.09-7.35L35,48.49V28.86H26.54a4.47,4.47,0,0,1-8.42,0H0v-3H18.12a4.47,4.47,0,0,1,8.42,0H35V6.5a7.48,7.48,0,0,0-1.55-1.31V0A8.86,8.86,0,0,1,36,2.45,9,9,0,0,1,38.57,0V5.19A6.7,6.7,0,0,0,37,6.5V25.86h7.66A15.28,15.28,0,0,1,60,11.22h1.49V32.71h9.92a4.54,4.54,0,0,1,3.89,2.21l2.21-2.21a1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42l-2.15,2.15H79.8A1,1,0,0,1,80.8,37.28Z")
             .attr("fill", "#ffc000")
             .attr("transform", `scale(${widScaleRatio})`)
@@ -6732,6 +7061,7 @@
     //story panel icon 绘制
     d3.select("#showStoryPanelsImg")
         .style("right", `${240 / 1728 * window.innerWidth}px`)
+        .style("cursor", "pointer")
         .style("top", `${0.91 * window.innerHeight}px`)
 
     //点击后tooltip显示

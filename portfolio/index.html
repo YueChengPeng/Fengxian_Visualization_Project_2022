@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Fengxian Visualization Project</title>
+    <title>Title</title>
 
     <script type="text/javascript" src="js/lib/jquery.min.js"></script>
     <script type="text/javascript" src="js/scrollmagic/uncompressed/ScrollMagic.js"></script>
@@ -135,6 +135,7 @@
             font-weight: 200;
             font-style: normal;
             font-size: .4rem;
+            font-min-size: 11px;
             color: rgba(255, 255, 255, 0.71);
         }
 
@@ -301,8 +302,8 @@
         <p id="designProcessSubCata3" class="normalContentSmallWord cataTxt" style="opacity: 1; cursor: pointer; line-height: 1rem" onclick="cataJumpTo(11);">Visualize Overview</p>
         <p id="designProcessSubCata4" class="normalContentSmallWord cataTxt" style="opacity: 1; cursor: pointer; line-height: 1rem" onclick="cataJumpTo(12);">Visualize Cases</p>
     </div>
-<!--    一个占位的div    -->
-<!--    <div style="margin-top: 10rem"></div>-->
+    <!--    一个占位的div    -->
+    <!--    <div style="margin-top: 10rem"></div>-->
     <p id="cataPlaceHolder"></p>
     <p id="otherChallengesCataTxt" class="normalContent cataTxt" style="margin-top: 0rem; opacity: .3; cursor: pointer; line-height: 1rem" onclick="cataJumpTo(6);">OTHER CHALLENGES</p>
     <p id="reflectionCataTxt" class="normalContent cataTxt" style="opacity: .3; cursor: pointer; line-height: 1rem" onclick="cataJumpTo(7);">REFLECTION</p>
@@ -310,55 +311,28 @@
 
 </div>
 
-<!--video和遮挡的矩形-->
-<div style="position:absolute;left: 50%; top: 50%; transform: translate(-50%, -50%); /* 50%为自身尺寸的一半 */
-    -webkit-transform: translate(-50%, -50%); z-index: -1; ">
-    <div style="position:absolute; transform: translate(0px, -1px); height: 20%; width: 100%; background-image: -webkit-linear-gradient(90deg, rgba(20,20,20,0), #141414)"></div>
-    <div style="position:absolute; transform: translate(0px, -1px); height: 20%; width: 100%; background-image: -webkit-linear-gradient(90deg, rgba(20,20,20,0), #141414)"></div>
-    <div style="position:absolute; transform: translate(0px, 400%); height: 20%; width: 100%; background-image: -webkit-linear-gradient(90deg, #141414, rgba(20,20,20,0))"></div>
-    <div style="position:absolute; transform: translate(0px, 400%); height: 20%; width: 100%; background-image: -webkit-linear-gradient(90deg, #141414, rgba(20,20,20,0))"></div>
 
-    <div style="position:absolute; height: 100%; width: 100%; background-color: #141414; opacity: .3"></div>
 
-    <video id="coverVideo" src="video/coverVideo.mp4" style="height: 90vh;" autoplay="autoplay" muted="muted"
-           loop="loop"></video>
-</div>
+<div class="row" style="width: 100%; height: 100%;">
 
-<!--封面文字-->
-<div style="margin-left: 5rem; margin-right: 5rem; height:100vh; display: flex; flex-direction: row; justify-content: space-between;">
-    <div style="height:100%; display: flex; flex-direction: column; justify-content: center">
-        <span class="h1title fontWhite">A BLOW OF</span>
-        <span class="h1title fontGrad45">ANGRY WIND</span>
-        <span class="h1title fontWhite">BROKE CHAINS</span>
-        <span class="h1title fontWhite"> ON A MOTHER</span>
+    <div class="col-lg-5" style="padding: 5rem; padding-left: 8rem">
+        <p class="h1title fontWhite" style="">WHEN</p>
+        <p class="h1title fontWhite"
+           style="font-size: 4.5rem; text-align:center; margin-left: 3rem;background-image: -webkit-linear-gradient(45deg, #da7d1e, #ffc000);">
+            WIND</p>
+        <p class="h1title fontWhite" style="font-size: 5rem;">BLOWS</p>
+        <p class="h4title fontWhite">
+            the design process of the visualization of public opinions of Fengxian incident
+        </p>
+
     </div>
-    <div style="height:100%; display: flex; flex-direction: column; justify-content: center">
-        <div style="display: flex; flex-direction: column">
-            <span id="coverNoViews" class="h1title fontGrad45" align="right">0</span>
-            <span class="h1title fontWhite" align="right" style="font-size: 1rem; opacity: .6">views</span>
-            <br>
-        </div>
 
-        <div style="display: flex; flex-direction: column">
-            <span id="coverNoDiscussions" class="h1title fontGrad45" align="right">0</span>
-            <span class="h1title fontWhite" align="right" style="font-size: 1rem; opacity: .6">discussions</span>
-            <br>
-        </div>
-
-        <div style="display: flex; flex-direction: column">
-            <span id="coverNoOriginals" class="h1title fontGrad45" align="right">0</span>
-            <span class="h1title fontWhite" align="right" style="font-size: 1rem; opacity: .6">original posters</span>
-
-            <div align="right" style="margin-top: 2rem">
-                <button type="button" class="questionUnSelected normalContent" data-toggle="tooltip" data-bs-placement="left"
-                        title="data of 142 hashtags on Weibo.com related to this incident"
-                        style="opacity: 1" onmouseover="questionMap(1)">?
-                </button>
-            </div>
-        </div>
+    <div class="col-lg-7" style="padding: 5rem">
+        <img src="img/coverBg.png" style="width: 100%">
 
     </div>
 </div>
+
 
 
 <div id="backgroundCatalogEnter"></div>
@@ -381,7 +355,7 @@
 
     <div class="postCard" style="margin-right: 20rem; margin-left: 2rem; border-radius:25px;">
         <div style="display: flex; align-items: flex-end;">
-            <p class="postName">Investigation Report 1 · County Level</p>
+            <p class="postName">The First Investigation Report</p>
         </div>
         <p class="normalContent" style="opacity: .7; margin: 0rem">After the preliminary investigation verification, the
             mother got married with Dong in August 1998, and <span class="normalContentHighlight">there is no human trafficking</span>.
@@ -407,7 +381,7 @@
             local women and children will be revealed. <span class="normalContentHighlight">We need a higher-level investigation team to overthrow the local interest network from the outside and bring fair back.</span>
         </p>
         <div style="margin-top: 1rem">
-<!--            <p class="normalContent" style="margin: 0rem; text-align: end;">Fengxian County Publicity Department</p>-->
+            <!--            <p class="normalContent" style="margin: 0rem; text-align: end;">Fengxian County Publicity Department</p>-->
             <p class="normalContent" style="margin: 0rem; text-align: end;">9:15 · Jan 31, 2022</p>
 
             <div class="divider-flex" style="margin-top: 2rem"></div>
@@ -442,9 +416,9 @@
         Internet. It proved that Internet public opinion has a great amount of positive energy and has
         become <span class="normalContentHighlight">an indispensable part of the driving force for China’s governance progress</span>.
 
-<!--        The progress (of this incident) is largely driven by <span class="normalContentHighlight">Internet public opinion</span>,-->
-<!--        which has enormous positivity, and has become an indispensable part of the driving force for governance-->
-<!--        progress.-->
+        <!--        The progress (of this incident) is largely driven by <span class="normalContentHighlight">Internet public opinion</span>,-->
+        <!--        which has enormous positivity, and has become an indispensable part of the driving force for governance-->
+        <!--        progress.-->
     </p>
 
     <div style="float: right; display: flex;">
@@ -465,8 +439,9 @@
     <div style="margin-left: auto; margin-right: auto; width: fit-content; ">
         <p id="windCardLine1" class="normalContentBigword" style="margin: 0rem; text-align: center">I visualized public voices of this incident on Weibo</p>
         <p id="windCardLine2" class="normalContentBigword" style="margin: 0px; text-align: center">And there were wisps of red, angry wind</p>
-        <a class="normalContentHighlight" style="margin: 0px; margin-top: 1rem; text-align: center" href="https://yuechengpeng.github.io/Fengxian_Visualization_Project_2022/project/">See FULL
-            visualization project</a>
+        <p style="margin: 0px; margin-top: 1rem; text-align: center">
+            <a class="normalContentHighlightLink" href="https://yuechengpeng.github.io/Fengxian_Visualization_Project_2022/project/" target="_blank" style="cursor: pointer">See FULL
+                visualization project</a></p>
     </div>
 </div>
 <div id="backgroundCatalogExit"></div>
@@ -486,9 +461,9 @@
                 class="normalContentHighlight">human rights</span> are being violated. That’s why I started a design
         project focusing on this incident</p>
     <p class="normalContent" style="margin-top: 2rem">
-<!--        Since most discussions of this incident happened online, where-->
-<!--        public opinion can easily be measured by data, I wanted to finish my design utilizing <span-->
-<!--                class="normalContentHighlight">data on social media</span>.-->
+        <!--        Since most discussions of this incident happened online, where-->
+        <!--        public opinion can easily be measured by data, I wanted to finish my design utilizing <span-->
+        <!--                class="normalContentHighlight">data on social media</span>.-->
         Since most public discussions of this incident happened online, I decided
         to create my design with the <span class="normalContentHighlight">social media data</span>.
 
@@ -656,7 +631,7 @@
             <div style="margin-bottom: 8rem; margin-top: 8rem">
                 <p class="h4title fontGrad45" style="margin-bottom: 1rem; text-decoration: underline">Samara seeds -
                     posts</p>
-                <p class="normalContent">Like posts on social media, samara seeds represents freedom, are easy to spread and take root.</p>
+                <p class="normalContent">Like posts on social media, samara seeds <span class="normalContentHighlight">represents freedom</span>, are easy to spread and take root.</p>
             </div>
         </div>
     </div>
@@ -682,9 +657,9 @@
             <div style="margin-bottom: 8rem;">
                 <p class="h4title fontGrad45" style="margin-bottom: 1rem; text-decoration: underline">Wind -
                     hashtags</p>
-                <p class="normalContent">Like public opinions, wind is intangible yet powerful and influential.
-                    This metaphor is <span class="normalContentHighlight">consistent</span>: wind carries
-                    seeds just as hashtags contain posts, and it also provides an image of freedom.</p>
+                <p class="normalContent">Like public opinions, wind is <span class="normalContentHighlight">intangible yet powerful and influential</span>.
+                    This metaphor is consistent: wind carries
+                    seeds just as hashtags contain posts, and it also provides <span class="normalContentHighlight">an image of freedom.</span></p>
             </div>
         </div>
     </div>
@@ -759,8 +734,8 @@
             <div style="margin-bottom: 0rem;">
                 <div id="seedClusterEnter"></div>
                 <p class="normalContent">
-<!--                    After applying real data, I found giving every glyph an absolute coordinate-->
-<!--                    according to its post time and sentiment could result in clustering.-->
+                    <!--                    After applying real data, I found giving every glyph an absolute coordinate-->
+                    <!--                    according to its post time and sentiment could result in clustering.-->
                     After applying real data, I found that the glyphs from the same
                     hashtag groups were <span class="normalContentHighlight">overlapping</span> when posts had similar sentiment and were posted at the
                     similar time.
@@ -824,9 +799,9 @@
             <div style="margin-bottom: 0rem;">
                 <div id="windMapEnter"></div>
                 <p class="normalContent">Then I brainstormed the appearance of wind, and was inspired by <span
-                        class="normalContentHighlight">this amazing work of wind visualization</span>. Therefore, I decided to
+                        class="normalContentHighlight">this amazing work of wind visualization</span> from Google's "Big Picture" data visualization group. Therefore, I decided to
                     present wind glyph also with CURVES. </p>
-                <p class="normalContent" style="opacity: .5;">(credit: Google's "Big Picture" data visualization group)</p>
+                <!--                <p class="normalContent" style="opacity: .5;">(credit: Google's "Big Picture" data visualization group)</p>-->
 
                 <div id="windMapExit"></div>
 
@@ -865,12 +840,12 @@
             <div style="margin-bottom: 0rem;">
                 <div id="demenRedEnter"></div>
                 <p class="normalContent">
-<!--                    After applying real data, however, I found these three dimensions can <span-->
-<!--                        class="fontHighlight">be reduced to one with a conclusive representation of "public influence"</span>,-->
-<!--                    which can therefore be encoded into one visual channel.-->
+                    <!--                    After applying real data, however, I found these three dimensions can <span-->
+                    <!--                        class="fontHighlight">be reduced to one with a conclusive representation of "public influence"</span>,-->
+                    <!--                    which can therefore be encoded into one visual channel.-->
 
-<!--                    After applying the real data, I found that there were actually only three different-->
-<!--                    wind glyphs to represent “public influence”. -->
+                    <!--                    After applying the real data, I found that there were actually only three different-->
+                    <!--                    wind glyphs to represent “public influence”. -->
 
                     After applying real data, I found these three attributes <span class="normalContentHighlight">can be reduced to one with a
                     conclusive representation of "public influence"</span>. Then I encoded it into one visual channel: curve shape.
@@ -1072,7 +1047,7 @@
             <div style="margin-bottom: 8rem;">
                 <div id="mapSketchEnter"></div>
                 <p class="h4title fontWhite" style="margin-bottom: 1rem;">Sketch</p>
-                <p class="normalContent">In order to tell a <span class="normalContentHighlight">consistent</span>
+                <p class="normalContent">In order to tell a consistent
                     visual story, I still used the glyph of wind, which is the metaphor of <span
                             class="normalContentHighlight">public voices</span>.</p>
                 <p class="normalContent"> Larger wind glyph indicates more human trafficking cases, which implies
@@ -1097,8 +1072,8 @@
                 <p class="normalContent">
                     So I tried <span class="normalContentHighlight">KMeans clustering algorithm</span> and different calculation methods for
                     clustered centroid.
-<!--                    Then I tested <span class="normalContentHighlight">KMeans</span>, an algorithm-->
-<!--                    for clustering, and different calculation method for clustered centroid.</p>-->
+                    <!--                    Then I tested <span class="normalContentHighlight">KMeans</span>, an algorithm-->
+                    <!--                    for clustering, and different calculation method for clustered centroid.</p>-->
                 <p class="normalContent">clustered centroid equals:</p>
                 <div style="display: flex; flex-direction: row">
                     <div style="display: flex; flex-direction: column; margin-right: 2rem">
@@ -1110,15 +1085,15 @@
                         </button>
                     </div>
 
-<!--                    <div style="display: flex; flex-direction: column">-->
-<!--                        <button id="switchMapQ0" type="button" class="questionUnSelected normalContent"-->
-<!--                                style="margin-bottom: .5rem" onmouseover="questionMap(0, 1)"-->
-<!--                                onmouseleave="questionMap(0, 0)">?-->
-<!--                        </button>-->
-<!--                        <button id="switchMapQ1" type="button" class="questionUnSelected normalContent"-->
-<!--                                style="opacity: 0" onmouseover="questionMap(1)">?-->
-<!--                        </button>-->
-<!--                    </div>-->
+                    <!--                    <div style="display: flex; flex-direction: column">-->
+                    <!--                        <button id="switchMapQ0" type="button" class="questionUnSelected normalContent"-->
+                    <!--                                style="margin-bottom: .5rem" onmouseover="questionMap(0, 1)"-->
+                    <!--                                onmouseleave="questionMap(0, 0)">?-->
+                    <!--                        </button>-->
+                    <!--                        <button id="switchMapQ1" type="button" class="questionUnSelected normalContent"-->
+                    <!--                                style="opacity: 0" onmouseover="questionMap(1)">?-->
+                    <!--                        </button>-->
+                    <!--                    </div>-->
 
                 </div>
                 <div id="kMeansExit"></div>
@@ -1182,10 +1157,10 @@
                     would lose the big picture of the visualization; when <span class="normalContentHighlight">zoomed out</span>, the user could not clearly
                     perceive the details and interact with each glyph.
 
-<!--                    When <span class="normalContentHighlight">zoom in</span> for detail, the layout-->
-<!--                    is too big to view in its entirety. When <span class="normalContentHighlight">zoom out</span> to see-->
-<!--                    the overall structure, small details are lost, and interaction with glyph (e.g. to show tooltip) is-->
-<!--                    rather difficult.-->
+                    <!--                    When <span class="normalContentHighlight">zoom in</span> for detail, the layout-->
+                    <!--                    is too big to view in its entirety. When <span class="normalContentHighlight">zoom out</span> to see-->
+                    <!--                    the overall structure, small details are lost, and interaction with glyph (e.g. to show tooltip) is-->
+                    <!--                    rather difficult.-->
                 </p>
                 <div id="otherChallenge1Exit"></div>
 
@@ -1335,15 +1310,17 @@
          style="position: absolute; right: 0; width: 15rem;margin-top: -2rem; transform: translate(-2rem, 25rem);opacity: .7">
     <img src="img/arr2.png"
          style="position: absolute; width: 20rem; transform: translate(25rem, 10rem)scale(0.1); margin-top: -5rem; opacity: .6">
+
     <div class="captionContent"
-       style="position: absolute; width: 12rem;transform: translate(37rem, 42rem); margin-top: -5rem">
+         style="position: absolute; width: 12rem;transform: translate(37rem, 42rem); margin-top: -5rem">
+        <p style="transform: translate(0rem, -2rem)">
+            (credit: cartoon from <a class="fontHighlight" href="https://twitter.com/martinshovel/status/804968341471457280" target="_blank" >Martin Shovel</a> on Twitter)
+        </p>
         <p style="margin-bottom: .5rem">
             Post-truth is a time when "objective facts are less influential in shaping public opinion than appeals to emotion and personal
             belief" <a href="https://languages.oup.com/word-of-the-year/2016/" target="_blank" class="fontHighlight">(by Oxford dictionaries)</a>
         </p>
-        <p>
-            (credit: cartoon from <a class="fontHighlight" href="https://twitter.com/martinshovel/status/804968341471457280" target="_blank" >Martin Shovel</a> on Twitter)
-        </p>
+
 
     </div>
 
@@ -1385,7 +1362,7 @@
 <div id="projectLinkCatalogEnter"></div>
 <div style="margin-left: 20rem; margin-right: 20rem; margin-top: 4rem; margin-bottom: 6rem; ">
     <p class="h2title" style="text-align: center; margin-bottom: 8rem"><span class="fontWhite">PROJECT LINK</span></p>
-    <a href="https://yuechengpeng.github.io/Fengxian_Visualization_Project_2022/project/" target="_blank" style="cursor: pointer; text-decoration: none;">
+    <a href="https://www.google.com" target="_blank" style="cursor: pointer; text-decoration: none;">
         <div style="border-radius: 2rem;-webkit-box-shadow: rgba(0, 0, 0, 0.6) 0px 0px 50px;
             -moz-box-shadow: rgba(0, 0, 0, 0.6) 0px 0px 50px;
             box-shadow: rgba(0, 0, 0, 0.6) 0px 0px 50px; padding-bottom: 1.5rem">
@@ -2013,9 +1990,7 @@
     };
     // var video = document.getElementById("coverVideo");
     // video.play();
-    $setJumpNumber(1000000, 118200000000, 1, "#coverNoViews");
-    $setJumpNumber(200000, 11200000, 1, "#coverNoDiscussions");
-    $setJumpNumber(1000, 271000, 1, "#coverNoOriginals");
+
 </script>
 
 <script>
@@ -6922,7 +6897,7 @@
 
 <!--窗口resize 刷新-->
 <script>
-     window.onresize = function()
+    window.onresize = function()
     {location.reload();}
 </script>
 
